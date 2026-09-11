@@ -1,7 +1,7 @@
 import pytest
 from sympy import Symbol, sqrt, sin as sympy_sin
 
-from expression_parsing.expression_utilities import (
+from compareexpressions.expression_parsing.expression_utilities import (
     compute_relative_tolerance_from_significant_decimals,
     convert_absolute_notation,
     convert_bracket_notation,

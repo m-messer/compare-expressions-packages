@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from criteria import generate_criteria_parser, CriteriaGraph
+from compareexpressions.criteria import generate_criteria_parser, CriteriaGraph
 
 
 RESERVED = {"learner": {"response": None}, "task": {"answer": None}}

@@ -9,7 +9,7 @@ evaluation layer.
 
 from copy import deepcopy
 
-from expression_parsing import default_parameters as symbolic_default_parameters
+from compareexpressions.expression_parsing import default_parameters as symbolic_default_parameters
 
 default_parameters = deepcopy(symbolic_default_parameters)
 default_parameters.update(

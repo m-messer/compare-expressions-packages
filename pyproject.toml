@@ -1,0 +1,80 @@
+# Development environment for the monorepo (not a package itself).
+# `poetry install` here creates one venv with every package installed in
+# develop mode plus the lint/type/test tooling.
+
+[project]
+name = "compareexpressions-packages"
+# <3.13: latex2sympy2 pins antlr4-python3-runtime 4.7.2, which imports the
+# `typing.io` module removed in Python 3.13.
+requires-python = ">=3.11,<3.13"
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+compareexpressions-slr-parsing = { path = "slr_parsing", develop = true }
+compareexpressions-evaluation-result = { path = "evaluation_result", develop = true }
+compareexpressions-criteria = { path = "criteria", develop = true }
+compareexpressions-expression-parsing = { path = "expression_parsing", develop = true }
+compareexpressions-units = { path = "units", develop = true }
+pytest = "^9.1"
+pytest-cov = "^7.0"
+ruff = "^0.16"
+mypy = "^2.3"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+# Packages are removed from this list as their refactor phase lands
+# (see docs/refactor/). tools/parity/capture_v0_1.py targets the frozen
+# v0.1 API and is kept verbatim.
+extend-exclude = [
+    "slr_parsing",
+    "evaluation_result",
+    "criteria",
+    "expression_parsing",
+    "units",
+    "tools/parity/capture_v0_1.py",
+]
+
+[tool.ruff.format]
+# NOTES.md quotes the original v0.1 code verbatim.
+exclude = ["NOTES.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N"]
+# Ambiguous-unicode checks: parsing Greek letters, Unicode dashes and unit
+# symbols (Ω, µ, Å) is the point of this code.
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["compareexpressions"]
+
+[tool.mypy]
+python_version = "3.11"
+# Packages are added here as their refactor phase lands (see docs/refactor/).
+files = ["tools/parity/corpus.py", "tools/parity/check.py"]
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = [
+    "tools/parity",
+    "slr_parsing/src",
+    "evaluation_result/src",
+    "criteria/src",
+    "expression_parsing/src",
+    "units/src",
+]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+# Not yet refactored: analysed for types but their own errors are not reported.
+# Each package leaves this list in its refactor phase.
+[[tool.mypy.overrides]]
+module = [
+    "compareexpressions.slr_parsing.*",
+    "compareexpressions.criteria.*",
+    "compareexpressions.expression_parsing.*",
+    "compareexpressions.units.*",
+]
+follow_imports = "silent"

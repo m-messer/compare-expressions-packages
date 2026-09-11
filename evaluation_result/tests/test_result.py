@@ -6,7 +6,7 @@ written fresh to cover feedback aggregation and serialisation.
 
 import pytest
 
-from evaluation_result import EvaluationResult
+from compareexpressions.evaluation_result import EvaluationResult
 
 
 class TestEvaluationResult:

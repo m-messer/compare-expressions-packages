@@ -1,4 +1,4 @@
-from slr_parsing import SLR_Parser, catch_undefined, infix, create_node, join, proceed, append_last
+from compareexpressions.slr_parsing import SLR_Parser, catch_undefined, infix, create_node, join, proceed, append_last
 
 start_symbol = "START"
 end_symbol = "END"

@@ -1,11 +1,11 @@
 import re
 from enum import Enum
-from expression_parsing.expression_utilities import (
+from compareexpressions.expression_parsing.expression_utilities import (
     substitute,
     create_sympy_parsing_params,
     parse_expression
 )
-from slr_parsing import (
+from compareexpressions.slr_parsing import (
     SLR_Parser,
     relabel,
     catch_undefined,
@@ -19,10 +19,10 @@ from slr_parsing import (
 from .unit_system_conversions import\
     set_of_SI_prefixes, set_of_SI_base_unit_dimensions, set_of_derived_SI_units_in_SI_base_units,\
     set_of_common_units_in_SI, set_of_very_common_units_in_SI, set_of_imperial_units, conversion_to_base_si_units
-from expression_parsing import FeedbackTag
+from compareexpressions.expression_parsing import FeedbackTag
 
-from expression_parsing.symbolic_preview import preview_function as symbolic_preview
-from expression_parsing.preview_utilities import parse_latex
+from compareexpressions.expression_parsing.symbolic_preview import preview_function as symbolic_preview
+from compareexpressions.expression_parsing.preview_utilities import parse_latex
 
 QuantityTags = Enum("QuantityTags", {v: i for i, v in enumerate("UVNR", 1)})
 

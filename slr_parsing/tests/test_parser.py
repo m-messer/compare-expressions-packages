@@ -7,7 +7,7 @@ these are written fresh to cover the core building blocks.
 
 import pytest
 
-from slr_parsing import (
+from compareexpressions.slr_parsing import (
     Token,
     ExprNode,
     SLR_expression_parser,

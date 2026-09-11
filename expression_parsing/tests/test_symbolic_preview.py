@@ -1,8 +1,8 @@
 import os
 import pytest
 
-from expression_parsing.preview_utilities import Params, extract_latex
-from expression_parsing.symbolic_preview import preview_function
+from compareexpressions.expression_parsing.preview_utilities import Params, extract_latex
+from compareexpressions.expression_parsing.symbolic_preview import preview_function
 from ._fixtures import elementary_function_test_cases
 
 

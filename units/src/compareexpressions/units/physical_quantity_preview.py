@@ -1,14 +1,14 @@
 import tokenize
 from copy import deepcopy
 
-from expression_parsing.expression_utilities import (
+from compareexpressions.expression_parsing.expression_utilities import (
     find_matching_parenthesis,
     parse_expression,
     SymbolDict,
     sympy_to_latex,
 )
 
-from expression_parsing.preview_utilities import (
+from compareexpressions.expression_parsing.preview_utilities import (
     Params,
     Preview,
     Result,
@@ -16,7 +16,7 @@ from expression_parsing.preview_utilities import (
     sanitise_latex,
 )
 
-from expression_parsing.expression_utilities import default_parameters as symbolic_default_parameters
+from compareexpressions.expression_parsing.expression_utilities import default_parameters as symbolic_default_parameters
 from .physical_quantity_utilities import SLR_quantity_parser as quantity_parser, expression_preprocess
 from .physical_quantity_utilities import SLR_quantity_parsing as quantity_parsing
 

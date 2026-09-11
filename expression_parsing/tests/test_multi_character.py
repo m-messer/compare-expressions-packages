@@ -1,5 +1,5 @@
 import pytest
-from expression_parsing.expression_utilities import parse_expression, create_sympy_parsing_params
+from compareexpressions.expression_parsing.expression_utilities import parse_expression, create_sympy_parsing_params
 
 class TestMultiCharImplicitMultiHigherPrecedenceIntegration:
     """

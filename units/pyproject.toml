@@ -1,21 +1,25 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "compareexpressions-units"
 version = "0.1.0"
 description = "Unit system data, physical-quantity parsing and dimensional analysis extracted from compareExpressions."
-requires-python = ">=3.8"
+# <3.13: latex2sympy2 pins antlr4-python3-runtime 4.7.2, which imports the
+# `typing.io` module removed in Python 3.13.
+requires-python = ">=3.11,<3.13"
 dependencies = [
-    "compareexpressions-slr-parsing",
-    "compareexpressions-expression-parsing",
-    "sympy",
+    "compareexpressions-slr-parsing (>=0.1.0,<0.3.0)",
+    "compareexpressions-expression-parsing (>=0.1.0,<0.3.0)",
+    "sympy (>=1.12,<2.0)",
 ]
 
-[project.optional-dependencies]
-test = ["pytest"]
+[tool.poetry]
+packages = [{ include = "compareexpressions/units", from = "src" }]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["units*"]
+# Resolve sibling packages from the monorepo during development; published
+# metadata keeps the plain requirements from [project.dependencies].
+[tool.poetry.dependencies]
+compareexpressions-slr-parsing = { path = "../slr_parsing", develop = true }
+compareexpressions-expression-parsing = { path = "../expression_parsing", develop = true }

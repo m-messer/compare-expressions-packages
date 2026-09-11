@@ -1,6 +1,6 @@
 import pytest
 
-from expression_parsing.syntactical_comparison import generate_arbitrary_number_pattern_matcher
+from compareexpressions.expression_parsing.syntactical_comparison import generate_arbitrary_number_pattern_matcher
 
 
 class TestGenerateArbitraryNumberPatternMatcher:

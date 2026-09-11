@@ -10,7 +10,7 @@ strings (see feedback.py / FeedbackTag). Modules:
 Depends on the ``slr_parsing`` package, plus sympy and latex2sympy2.
 
 Submodules are importable directly (e.g.
-``from expression_parsing.expression_utilities import parse_expression``); the
+``from compareexpressions.expression_parsing.expression_utilities import parse_expression``); the
 most commonly used names are also re-exported here for convenience.
 """
 

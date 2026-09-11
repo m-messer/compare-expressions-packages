@@ -1,19 +1,20 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "compareexpressions-criteria"
 version = "0.1.0"
 description = "Criteria DSL parser and evaluation graph extracted from compareExpressions."
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 dependencies = [
-    "compareexpressions-slr-parsing",
+    "compareexpressions-slr-parsing (>=0.1.0,<0.3.0)",
 ]
 
-[project.optional-dependencies]
-test = ["pytest"]
+[tool.poetry]
+packages = [{ include = "compareexpressions/criteria", from = "src" }]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["criteria*"]
+# Resolve sibling packages from the monorepo during development; published
+# metadata keeps the plain requirements from [project.dependencies].
+[tool.poetry.dependencies]
+compareexpressions-slr-parsing = { path = "../slr_parsing", develop = true }

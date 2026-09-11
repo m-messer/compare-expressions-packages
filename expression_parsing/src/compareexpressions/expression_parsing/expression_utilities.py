@@ -14,7 +14,7 @@ default_parameters = {
 }
 
 # -------- String Manipulation imports
-from slr_parsing import (
+from compareexpressions.slr_parsing import (
     SLR_expression_parser,
     infix,
     group,

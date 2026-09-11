@@ -1,17 +1,13 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "compareexpressions-evaluation-result"
 version = "0.1.0"
 description = "Evaluation result container extracted from compareExpressions."
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 dependencies = []
 
-[project.optional-dependencies]
-test = ["pytest"]
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["evaluation_result*"]
+[tool.poetry]
+packages = [{ include = "compareexpressions/evaluation_result", from = "src" }]

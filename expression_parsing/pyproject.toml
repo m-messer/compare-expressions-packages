@@ -1,22 +1,25 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "compareexpressions-expression-parsing"
 version = "0.1.0"
 description = "SymPy-based expression parsing, preprocessing and LaTeX preview extracted from compareExpressions."
-requires-python = ">=3.8"
+# <3.13: latex2sympy2 pins antlr4-python3-runtime 4.7.2, which imports the
+# `typing.io` module removed in Python 3.13.
+requires-python = ">=3.11,<3.13"
 dependencies = [
-    "compareexpressions-slr-parsing",
-    "sympy",
+    "compareexpressions-slr-parsing (>=0.1.0,<0.3.0)",
+    "sympy (>=1.12,<2.0)",
     "latex2sympy2",
     "typing_extensions",
 ]
 
-[project.optional-dependencies]
-test = ["pytest"]
+[tool.poetry]
+packages = [{ include = "compareexpressions/expression_parsing", from = "src" }]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["expression_parsing*"]
+# Resolve sibling packages from the monorepo during development; published
+# metadata keeps the plain requirements from [project.dependencies].
+[tool.poetry.dependencies]
+compareexpressions-slr-parsing = { path = "../slr_parsing", develop = true }

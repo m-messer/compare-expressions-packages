@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from units import preview_function
+from compareexpressions.units import preview_function
 from .test_slr_quantity import slr_strict_si_syntax_test_cases, slr_natural_si_syntax_test_cases
 
 
