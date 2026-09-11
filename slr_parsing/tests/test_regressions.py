@@ -1,0 +1,87 @@
+"""Regression tests for bugs carried over from the v0.1 extraction."""
+
+import pytest
+
+from compareexpressions.slr_parsing import (
+    ExprNode,
+    SLR_expression_parser,
+    SLR_Parser,
+    Token,
+    group,
+    new_root_on_error,
+    operate,
+)
+
+
+def leaf(label, content="x"):
+    return ExprNode(Token(label, content, content, 0, 0), [])
+
+
+class TestExprNodeTags:
+    @pytest.mark.xfail(strict=True, reason="v0.1 bug: ExprNode(tags=set()) default is shared by all nodes")
+    def test_nodes_without_tag_handler_do_not_share_tags(self):
+        a, b = leaf("A"), leaf("B")
+        a.tags.add("X")
+        assert b.tags == set()
+
+    @pytest.mark.xfail(strict=True, reason="v0.1 bug: ExprNode.copy() shares the tags set")
+    def test_copy_does_not_share_tags(self):
+        node = leaf("A")
+        node.tags.add("X")
+        clone = node.copy()
+        clone.tags.add("Y")
+        assert node.tags == {"X"}
+
+    @pytest.mark.xfail(strict=True, reason="v0.1 bug: ExprNode.__str__ hides tags unless there are two or more")
+    def test_str_shows_a_single_tag(self):
+        node = leaf("A")
+        node.tags = {"X"}
+        assert str(node) == "A: x tags: {'X'}"
+
+
+class TestExpressionParserBuilder:
+    @pytest.mark.xfail(strict=True, reason="v0.1 bug: custom expression_node becomes a literal token regex")
+    def test_custom_expression_node_symbol_is_not_a_literal_token(self):
+        # The expression-node symbol ("E") must only exist in the grammar; an "E"
+        # in the input is ordinary (undefined) text.
+        parser = SLR_expression_parser(
+            infix_operators=[("+", "ADD")],
+            undefined=("O", "OTHER"),
+            expression_node=("E", "EXPRESSION_NODE"),
+        )
+        tokens = parser.scan("2E+x")
+        assert [(t.label, t.content) for t in tokens] == [("OTHER", "2E"), ("ADD", "+"), ("OTHER", "x")]
+        assert parser.parse(tokens)[0].content_string() == "2E+x"
+
+
+class TestParserConstruction:
+    @pytest.mark.xfail(strict=True, reason="v0.1 bug: SLR_Parser sorts the caller's token_list in place")
+    def test_token_list_argument_is_not_mutated(self):
+        token_list = [("START", "START"), ("END", "END"), ("NULL", "NULL"), (" *\\+ *", "ADD"), ("x", "X")]
+        before = list(token_list)
+        SLR_Parser(token_list, [("START", "E", None), ("E", "E+E", None), ("E", "x", None)], "START", "END", "NULL")
+        assert token_list == before
+
+    @pytest.mark.xfail(strict=True, reason="v0.1 bug: scan() with unknown mode raises UnboundLocalError")
+    def test_scan_rejects_unknown_mode(self):
+        parser = SLR_expression_parser(infix_operators=[("+", "ADD")])
+        with pytest.raises(ValueError, match="mode"):
+            parser.scan("1+2", mode="nonsense")
+
+    @pytest.mark.xfail(strict=True, reason="v0.1 bug: group/operate accept or misreport zero elements")
+    @pytest.mark.parametrize("action", [group, operate])
+    def test_actions_reject_zero_elements(self, action):
+        with pytest.raises(ValueError):
+            action(0)
+
+
+class TestErrorRecovery:
+    @pytest.mark.xfail(strict=True, reason="v0.1 bug: parse() crashes on tokens left after ACCEPT")
+    def test_new_root_on_error_starts_a_new_root_at_the_offending_token(self):
+        parser = SLR_expression_parser(
+            infix_operators=[("+", "ADD")],
+            delimiters=[(("(", ")"), group(1))],
+            error_handler=[(lambda items, next_symbol: next_symbol.label == "START_DELIMITER", new_root_on_error)],
+        )
+        output = parser.parse(parser.scan("(1+2)(3)"))
+        assert [node.content_string() for node in output] == ["(1+2)", "(3)"]
