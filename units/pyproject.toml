@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "compareexpressions-units"
+version = "0.1.0"
+description = "Unit system data, physical-quantity parsing and dimensional analysis extracted from compareExpressions."
+requires-python = ">=3.8"
+dependencies = [
+    "compareexpressions-slr-parsing",
+    "compareexpressions-expression-parsing",
+    "sympy",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["units*"]
