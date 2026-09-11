@@ -45,7 +45,6 @@ class TestExprNodeTags:
 
 
 class TestExpressionParserBuilder:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: custom expression_node becomes a literal token regex")
     def test_custom_expression_node_symbol_is_not_a_literal_token(self):
         # The expression-node symbol ("E") must only exist in the grammar; an "E"
         # in the input is ordinary (undefined) text.

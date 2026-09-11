@@ -110,5 +110,47 @@
  "criteria.parse|response written as answer": {
   "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
   "value": "WRITTEN_AS:  written as  tags: {}\n0: RESERVED: response tags: {}\n1: RESERVED: answer tags: {}"
+ },
+ "expr.parse|default|2E": {
+  "reason": "slr_parsing: the convention parser no longer scans a capital E as its expression-node symbol, so inputs like 2E / xE parse",
+  "value": {
+   "latex": "2 E",
+   "parsed": "2*E"
+  }
+ },
+ "expr.parse|default|xE": {
+  "reason": "slr_parsing: the convention parser no longer scans a capital E as its expression-node symbol, so inputs like 2E / xE parse",
+  "value": {
+   "latex": "E x",
+   "parsed": "E*x"
+  }
+ },
+ "expr.parse|strict|xE": {
+  "reason": "slr_parsing: the convention parser no longer scans a capital E as its expression-node symbol, so inputs like 2E / xE parse",
+  "value": {
+   "latex": "xE",
+   "parsed": "xE"
+  }
+ },
+ "expr.preview|default|2E": {
+  "reason": "slr_parsing: the convention parser no longer scans a capital E as its expression-node symbol, so inputs like 2E / xE parse",
+  "value": {
+   "latex": "2 \\cdot E",
+   "sympy": "2E"
+  }
+ },
+ "expr.preview|default|xE": {
+  "reason": "slr_parsing: the convention parser no longer scans a capital E as its expression-node symbol, so inputs like 2E / xE parse",
+  "value": {
+   "latex": "E \\cdot x",
+   "sympy": "xE"
+  }
+ },
+ "expr.preview|strict|xE": {
+  "reason": "slr_parsing: the convention parser no longer scans a capital E as its expression-node symbol, so inputs like 2E / xE parse",
+  "value": {
+   "latex": "xE",
+   "sympy": "xE"
+  }
  }
 }

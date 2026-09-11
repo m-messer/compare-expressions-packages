@@ -291,7 +291,7 @@ def SLR_expression_parser(nodes=[], infix_operators=[], delimiters=[], undefined
         expression_node_symbol = "EXPRESSION_NODE"
         expression_node = (expression_node_symbol, expression_node_symbol, None)
     else:
-        undefined += (None,)
+        expression_node += (None,)
 
     if group_node is None:
         group_node_symbol = "GROUP_NODE"

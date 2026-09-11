@@ -3,6 +3,8 @@
     poetry run python tools/parity/check.py            # report, exit 1 on unexpected diffs
     poetry run python tools/parity/check.py --update   # also record current values of
                                                        # already-listed expected changes
+    poetry run python tools/parity/check.py --accept "why"   # record every unexpected diff as
+                                                             # an expected change (review first!)
 
 Probes mirror ``capture_v0_1.py`` key-for-key; only the calls into the
 packages are adapted as their APIs change during the refactor. Intentional
@@ -170,9 +172,17 @@ def main() -> int:
         if update:
             expected[k]["value"] = current[k]
 
-    if update and wrong:
+    accept_reason = sys.argv[sys.argv.index("--accept") + 1] if "--accept" in sys.argv else None
+    if accept_reason:
+        for k in unexpected:
+            expected[k] = {"reason": accept_reason, "value": current[k]}
+        print(f"Accepted {len(unexpected)} change(s) as expected.")
+        unexpected = []
+
+    if (update and wrong) or accept_reason:
         expected_path.write_text(json.dumps(expected, indent=1, sort_keys=True, ensure_ascii=False) + "\n")
-        print(f"Updated {len(wrong)} expected value(s).")
+        if update and wrong:
+            print(f"Updated {len(wrong)} expected value(s).")
 
     print(
         f"{len(current)} probes; {len(expected)} expected changes; "
