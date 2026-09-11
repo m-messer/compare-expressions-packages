@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]  # 3.13: blocked by latex2sympy2 (see expression_parsing/pyproject.toml)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        run: pipx install poetry==2.4.3
+
+      - name: Install dev environment
+        run: |
+          poetry env use python${{ matrix.python-version }}
+          poetry install
+
+      - name: Lint
+        run: poetry run ruff check .
+
+      - name: Format
+        run: poetry run ruff format --check .
+
+      - name: Type check
+        run: poetry run mypy
+
+      - name: Test
+        run: poetry run scripts/test.sh -q

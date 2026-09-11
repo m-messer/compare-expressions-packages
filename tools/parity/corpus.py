@@ -4,6 +4,8 @@ Quantity cases are frozen copies of the response strings in the v0.1 units
 test suites; the rest are hand-picked to cover each preprocessing feature.
 """
 
+from typing import Any
+
 CRITERIA_STRINGS = [
     *(
         s
@@ -25,7 +27,7 @@ CRITERIA_STRINGS = [
     "response contains a",
 ]
 
-EXPRESSION_VARIANTS = {
+EXPRESSION_VARIANTS: dict[str, dict[str, Any]] = {
     "default": {},
     "implicit_higher": {"convention": "implicit_higher_precedence", "elementary_functions": True},
     "elementary": {"elementary_functions": True},
@@ -160,7 +162,7 @@ LATEX_INPUTS = [
     r"\frac{x",
 ]
 
-QUANTITY_VARIANTS = {
+QUANTITY_VARIANTS: dict[str, dict[str, Any]] = {
     "strict_si": {"units_string": "SI", "strictness": "strict", "elementary_functions": True},
     "strict_all": {"units_string": "SI common imperial", "strictness": "strict"},
     "natural_si": {"units_string": "SI", "strictness": "natural", "elementary_functions": True},
@@ -219,6 +221,7 @@ _TEST_SUITE_CASES = [
     "10 kgm/s^2 + 10 kgm/s^2",
 ]
 
+# fmt: off
 _UNIT_NAMES_AND_SYMBOLS = [
     '"', "'", "A", "B", "Bq", "C", "Ci", "F", "Gy", "H", "Hz", "J", "K", "L", "N", "Np", "O", "Pa", "R", "S", "Sv",
     "T", "V", "W", "Wb", "a", "ampere", "angleminute", "anglesecond", "angstrom", "are", "astronomical_unit",
@@ -230,6 +233,7 @@ _UNIT_NAMES_AND_SYMBOLS = [
     "pound", "pt", "qt", "quart", "r", "rad", "radian", "rem", "roentgen", "s", "second", "siemens", "sievert", "sr",
     "st", "steradian", "stone", "t", "tesla", "u", "volt", "watt", "weber", "yard", "yd", "Å",
 ]
+# fmt: on
 
 _EXTRA_QUANTITY_CASES = [
     # Plurals and alternative spellings
