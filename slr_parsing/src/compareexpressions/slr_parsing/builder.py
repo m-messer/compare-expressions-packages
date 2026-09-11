@@ -1,13 +1,13 @@
-"""Generic expression-parser builder on top of SLR_Parser."""
+"""Generic expression-parser builder on top of SLRParser."""
 
 import re
 
 from .actions import create_node, infix, relabel
 from .grammar import catch_undefined
-from .parser import SLR_Parser
+from .parser import SLRParser
 
 
-def SLR_expression_parser(nodes=[], infix_operators=[], delimiters=[], undefined=None, costum_tokens=[], costum_productions=[], group_node=None, expression_node=None, start=None, null=None, end=None, error_handler=[]):
+def build_expression_parser(nodes=[], infix_operators=[], delimiters=[], undefined=None, custom_tokens=[], custom_productions=[], group_node=None, expression_node=None, start=None, null=None, end=None, error_handler=[]):
     infix_operators_dictionary = dict()
     unique_infix_operator_symbols = []
     for (symbol, label) in infix_operators:
@@ -48,7 +48,7 @@ def SLR_expression_parser(nodes=[], infix_operators=[], delimiters=[], undefined
         null_symbol = "NULL"
         null = (null_symbol, null_symbol)
 
-    token_list = [undefined, null, expression_node, start, end]+nodes+infix_operators_token+costum_tokens
+    token_list = [undefined, null, expression_node, start, end]+nodes+infix_operators_token+custom_tokens
 
     productions = [(start[0], expression_node[0], relabel)]
     productions += [(expression_node[0], n[0], create_node) for n in nodes]
@@ -59,6 +59,6 @@ def SLR_expression_parser(nodes=[], infix_operators=[], delimiters=[], undefined
         token_list += [(re.escape(delims[0])+" *", "START_DELIMITER"), (" *"+re.escape(delims[1]), "END_DELIMITER")]
         productions += [(expression_node[0], delims[0]+expression_node[0]+delims[1], action)]
 
-    productions += costum_productions
+    productions += custom_productions
 
-    return SLR_Parser(token_list, productions, start[1], end[1], null[1], error_handler=error_handler)
+    return SLRParser(token_list, productions, start[1], end[1], null[1], error_handler=error_handler)

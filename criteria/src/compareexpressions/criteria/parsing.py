@@ -1,4 +1,4 @@
-from compareexpressions.slr_parsing import SLR_Parser, catch_undefined, infix, create_node, join, proceed, append_last
+from compareexpressions.slr_parsing import SLRParser, catch_undefined, infix, create_node, join, proceed, append_last
 
 start_symbol = "START"
 end_symbol = "END"
@@ -58,7 +58,7 @@ def generate_criteria_parser(reserved_expressions, token_list=base_token_list, p
     for value in reserved_expressions.values():
         token_list += [(key, "RESERVED") for key in value.keys()]
 
-    return SLR_Parser(token_list, productions, start_symbol, end_symbol, null_symbol)
+    return SLRParser(token_list, productions, start_symbol, end_symbol, null_symbol)
 
 
 if __name__ == "__main__":

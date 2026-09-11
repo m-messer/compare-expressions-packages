@@ -18,17 +18,17 @@ from .actions import (
     proceed,
     relabel,
 )
-from .builder import SLR_expression_parser
+from .builder import build_expression_parser
 from .errors import new_root_on_error
 from .grammar import catch_undefined
-from .parser import SLR_Parser
+from .parser import SLRParser
 from .tags import (
-    tag,
-    tag_removal,
-    tag_replace,
-    tag_rule_intersection,
-    tag_rule_union,
-    tag_transfer,
+    add_tag,
+    remove_tag,
+    replace_tag,
+    intersection_rule,
+    union_rule,
+    inherit_tags,
 )
 from .tokens import (
     ExprNode,
@@ -53,19 +53,19 @@ __all__ = [
     "insert_infix",
     "compose",
     "flatten",
-    "tag_rule_union",
-    "tag_rule_intersection",
-    "tag_transfer",
-    "tag_removal",
-    "tag",
-    "tag_replace",
+    "union_rule",
+    "intersection_rule",
+    "inherit_tags",
+    "remove_tag",
+    "add_tag",
+    "replace_tag",
     "traverse_prefix",
     "traverse_postfix",
     "traverse_infix",
     "traverse_group",
     "new_root_on_error",
-    "SLR_expression_parser",
+    "build_expression_parser",
     "Token",
     "ExprNode",
-    "SLR_Parser",
+    "SLRParser",
 ]

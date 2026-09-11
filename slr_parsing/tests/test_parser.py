@@ -10,7 +10,7 @@ import pytest
 from compareexpressions.slr_parsing import (
     Token,
     ExprNode,
-    SLR_expression_parser,
+    build_expression_parser,
 )
 
 
@@ -57,7 +57,7 @@ class TestExprNode:
 class TestSLRExpressionParser:
     def _parser(self):
         # Numbers are caught as UNDEFINED lexemes; + and * are infix operators.
-        return SLR_expression_parser(infix_operators=[("+", "ADD"), ("*", "MUL")])
+        return build_expression_parser(infix_operators=[("+", "ADD"), ("*", "MUL")])
 
     @pytest.mark.parametrize("expr", ["1+2", "1+2*3", "a*b+c"])
     def test_roundtrip_content_string(self, expr):

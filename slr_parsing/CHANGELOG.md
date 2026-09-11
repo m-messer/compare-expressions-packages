@@ -4,6 +4,19 @@
 
 The first release after the extraction refactor. The import path is now `compareexpressions.slr_parsing` (was `slr_parsing`).
 
+### Renamed
+
+| v0.1 | 0.2.0 |
+|---|---|
+| `slr_parsing` (import) | `compareexpressions.slr_parsing` |
+| `SLR_Parser` | `SLRParser` |
+| `SLR_expression_parser(..., costum_tokens=, costum_productions=)` | `build_expression_parser(..., custom_tokens=, custom_productions=)` |
+| `tag` | `add_tag` |
+| `tag_removal` | `remove_tag` |
+| `tag_replace` | `replace_tag` |
+| `tag_transfer` | `inherit_tags` |
+| `tag_rule_union` / `tag_rule_intersection` | `union_rule` / `intersection_rule` |
+
 ### Fixed
 
 - `ExprNode` tag sets are no longer shared. Before, every node built without a tag handler shared the mutable default `tags=set()`, `copy()` shared the original's set, and `tag_transfer` returned a single child's own set as its parent's tags. Tagging one node could tag unrelated nodes.

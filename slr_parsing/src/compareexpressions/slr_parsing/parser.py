@@ -3,11 +3,11 @@
 import re
 
 from .grammar import catch_undefined
-from .tags import tag_transfer
+from .tags import inherit_tags
 from .tokens import ExprNode, Token
 
 
-class SLR_Parser:
+class SLRParser:
 
     def default_error_action(parser, stack, a, input_tokens, tokens, output):
         m = 70
@@ -22,7 +22,7 @@ class SLR_Parser:
             f"state: {parser.state_string(parser._states_index[stack[-1]])}\n" +
             f"{'-'*m}")
 
-    def __init__(self, token_list, productions, start_symbol, end_symbol, null_symbol, error_handler=[], tag_handler=tag_transfer):
+    def __init__(self, token_list, productions, start_symbol, end_symbol, null_symbol, error_handler=[], tag_handler=inherit_tags):
         self.token_list = sorted(token_list, key=lambda x: -len(x[0]))
         self.productions = productions
         self.start_symbol = start_symbol

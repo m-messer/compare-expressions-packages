@@ -4,13 +4,13 @@ import pytest
 
 from compareexpressions.slr_parsing import (
     ExprNode,
-    SLR_expression_parser,
-    SLR_Parser,
+    build_expression_parser,
+    SLRParser,
     Token,
     group,
     new_root_on_error,
     operate,
-    tag_transfer,
+    inherit_tags,
 )
 
 
@@ -34,7 +34,7 @@ class TestExprNodeTags:
     def test_inherited_tags_are_not_shared_with_the_child(self):
         child = leaf("A")
         child.tags.add("X")
-        parent = ExprNode(Token("P", "p", "p", 0, 0), [child], tag_handler=tag_transfer)
+        parent = ExprNode(Token("P", "p", "p", 0, 0), [child], tag_handler=inherit_tags)
         parent.tags.add("Y")
         assert child.tags == {"X"}
 
@@ -48,7 +48,7 @@ class TestExpressionParserBuilder:
     def test_custom_expression_node_symbol_is_not_a_literal_token(self):
         # The expression-node symbol ("E") must only exist in the grammar; an "E"
         # in the input is ordinary (undefined) text.
-        parser = SLR_expression_parser(
+        parser = build_expression_parser(
             infix_operators=[("+", "ADD")],
             undefined=("O", "OTHER"),
             expression_node=("E", "EXPRESSION_NODE"),
@@ -59,7 +59,7 @@ class TestExpressionParserBuilder:
 
 
     def test_multi_character_infix_operator(self):
-        parser = SLR_expression_parser(infix_operators=[("**", "POW"), ("+", "ADD")])
+        parser = build_expression_parser(infix_operators=[("**", "POW"), ("+", "ADD")])
         root = parser.parse(parser.scan("a**b+c"))[0]
         assert root.content_string() == "a**b+c"
         def labels(node):
@@ -72,11 +72,11 @@ class TestParserConstruction:
     def test_token_list_argument_is_not_mutated(self):
         token_list = [("START", "START"), ("END", "END"), ("NULL", "NULL"), ("E", "E"), (" *\\+ *", "+"), ("x", "x")]
         before = list(token_list)
-        SLR_Parser(token_list, [("START", "E", None), ("E", "E+E", None), ("E", "x", None)], "START", "END", "NULL")
+        SLRParser(token_list, [("START", "E", None), ("E", "E+E", None), ("E", "x", None)], "START", "END", "NULL")
         assert token_list == before
 
     def test_scan_rejects_unknown_mode(self):
-        parser = SLR_expression_parser(infix_operators=[("+", "ADD")])
+        parser = build_expression_parser(infix_operators=[("+", "ADD")])
         with pytest.raises(ValueError, match="mode"):
             parser.scan("1+2", mode="nonsense")
 
@@ -93,7 +93,7 @@ class TestParserConstruction:
             return action
 
         symbols = ["START", "END", "NULL", "S", "A", "B", "x", "y", "z"]
-        parser = SLR_Parser(
+        parser = SLRParser(
             [(s, s) for s in symbols],
             [
                 ("START", "S", record("START")),
@@ -117,7 +117,7 @@ class TestParserConstruction:
 
 class TestErrorRecovery:
     def test_new_root_on_error_starts_a_new_root_at_the_offending_token(self):
-        parser = SLR_expression_parser(
+        parser = build_expression_parser(
             infix_operators=[("+", "ADD")],
             delimiters=[(("(", ")"), group(1))],
             error_handler=[(lambda items, next_symbol: next_symbol.label == "START_DELIMITER", new_root_on_error)],

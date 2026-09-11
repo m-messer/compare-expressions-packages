@@ -6,13 +6,13 @@ from compareexpressions.expression_parsing.expression_utilities import (
     parse_expression
 )
 from compareexpressions.slr_parsing import (
-    SLR_Parser,
+    SLRParser,
     relabel,
     catch_undefined,
     infix,
     insert_infix,
     group,
-    tag_removal,
+    remove_tag,
     create_node,
     ExprNode
 )
@@ -329,7 +329,7 @@ def set_tags(strictness):
         elif node.label == "GROUP" and len(node.content[0]+node.content[1]) == 0:
             if strictness == "strict":
                 for (k, child) in enumerate(node.children):
-                    node.children[k] = tag_removal(child, QuantityTags.U)
+                    node.children[k] = remove_tag(child, QuantityTags.U)
                 if QuantityTags.U in tags:
                     tags.remove(QuantityTags.U)
                     tags.add(QuantityTags.R)
@@ -485,7 +485,7 @@ def SLR_quantity_parser(parameters):
         (error_condition_infix_missing_argument, error_action_infix_missing_argument),
     ]
 
-    parser = SLR_Parser(token_list, productions, start_symbol, end_symbol, null_symbol, tag_handler=set_tags(strictness), error_handler=error_handler)
+    parser = SLRParser(token_list, productions, start_symbol, end_symbol, null_symbol, tag_handler=set_tags(strictness), error_handler=error_handler)
     return parser
 
 

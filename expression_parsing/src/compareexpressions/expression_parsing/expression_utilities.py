@@ -15,7 +15,7 @@ default_parameters = {
 
 # -------- String Manipulation imports
 from compareexpressions.slr_parsing import (
-    SLR_expression_parser,
+    build_expression_parser,
     infix,
     group,
     compose
@@ -291,22 +291,22 @@ def SLR_implicit_multiplication_convention_parser(convention):
         (("(", ")"), group(1))
     ]
 
-    costum_tokens = [
+    custom_tokens = [
         (" *(\*|\+|-| ) *", "SPLIT"), (" */ *", "SOLIDUS")
     ]
 
     infix_operators = []
-    costum_productions = [("E", "*E", group(2, empty=True)), ("E", "EE", group(2, empty=True))]
+    custom_productions = [("E", "*E", group(2, empty=True)), ("E", "EE", group(2, empty=True))]
     if convention == "equal_precedence":
-        costum_productions += [("E", "E/E", infix)]
+        custom_productions += [("E", "E/E", infix)]
     elif convention == "implicit_higher_precedence":
-        costum_productions += [("E", "E/E", compose(infix, group(1, empty=True, delimiters=["(", ")"])))]
+        custom_productions += [("E", "E/E", compose(infix, group(1, empty=True, delimiters=["(", ")"])))]
     else:
         raise Exception(f"Unknown convention {convention}")
 
     undefined = ("O", "OTHER")
     expression_node = ("E", "EXPRESSION_NODE")
-    return SLR_expression_parser(delimiters=delimiters, infix_operators=infix_operators, undefined=undefined, expression_node=expression_node, costum_tokens=costum_tokens, costum_productions=costum_productions)
+    return build_expression_parser(delimiters=delimiters, infix_operators=infix_operators, undefined=undefined, expression_node=expression_node, custom_tokens=custom_tokens, custom_productions=custom_productions)
 
 
 def preprocess_according_to_chosen_convention(expression, parameters):
