@@ -65,7 +65,6 @@ class TestParserConstruction:
         SLR_Parser(token_list, [("START", "E", None), ("E", "E+E", None), ("E", "x", None)], "START", "END", "NULL")
         assert token_list == before
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: scan() with unknown mode raises UnboundLocalError")
     def test_scan_rejects_unknown_mode(self):
         parser = SLR_expression_parser(infix_operators=[("+", "ADD")])
         with pytest.raises(ValueError, match="mode"):

@@ -648,12 +648,14 @@ class SLR_Parser:
         else:
             token_catch_undefined = token_catch_undefined[0]
 
-        if "expression" in mode:
+        if mode == "expression":
             token_rules = [x for x in token_list if len(x) > 2 and x[2] not in {None, catch_undefined}]
             token_symbols = [x for x in token_list if len(x) == 2]
-        elif "bnf" in mode:
+        elif mode == "bnf":
             token_rules = []
             token_symbols = [(x[0], x[1]) for x in token_list]
+        else:
+            raise ValueError(f"Unknown scan mode {mode!r}, expected 'expression' or 'bnf'.")
 
         index = 0
         string = ""
