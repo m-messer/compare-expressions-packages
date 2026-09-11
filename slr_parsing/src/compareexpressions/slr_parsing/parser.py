@@ -420,9 +420,8 @@ class ExprNode(Token):
         return self.original[start:end+1]
 
     def __str__(self):
-        tags = " tags: "
-        tags += str(self.tags) if len(self.tags) > 1 else " {}"
-        return str(self.label)+": "+str(self.content)+tags
+        tags = str(self.tags) if len(self.tags) > 0 else "{}"
+        return str(self.label)+": "+str(self.content)+" tags: "+tags
 
     def __repr__(self):
         # REMARK(KarlLundengaard): This is not a good repr function, but it means that the most

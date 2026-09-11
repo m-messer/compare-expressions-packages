@@ -1,1 +1,114 @@
-{}
+{
+ "criteria.parse|a < b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  <  tags: {}\n0: OTHER: a tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|a < response": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  <  tags: {}\n0: OTHER: a tags: {}\n1: RESERVED: response tags: {}"
+ },
+ "criteria.parse|a <= b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  <=  tags: {}\n0: OTHER: a tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|a <= response": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  <=  tags: {}\n0: OTHER: a tags: {}\n1: RESERVED: response tags: {}"
+ },
+ "criteria.parse|a = b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "EQUALITY:  =  tags: {}\n0: OTHER: a tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|a = response": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "EQUALITY:  =  tags: {}\n0: OTHER: a tags: {}\n1: RESERVED: response tags: {}"
+ },
+ "criteria.parse|a > b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  >  tags: {}\n0: OTHER: a tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|a > response": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  >  tags: {}\n0: OTHER: a tags: {}\n1: RESERVED: response tags: {}"
+ },
+ "criteria.parse|a >= b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  >=  tags: {}\n0: OTHER: a tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|a >= response": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  >=  tags: {}\n0: OTHER: a tags: {}\n1: RESERVED: response tags: {}"
+ },
+ "criteria.parse|response - answer = 0": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "EQUALITY:  =  tags: {}\n0: OTHER: response - answer tags: {}\n1: OTHER: 0 tags: {}"
+ },
+ "criteria.parse|response < answer": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  <  tags: {}\n0: RESERVED: response tags: {}\n1: RESERVED: answer tags: {}"
+ },
+ "criteria.parse|response < b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  <  tags: {}\n0: RESERVED: response tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|response <= answer": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  <=  tags: {}\n0: RESERVED: response tags: {}\n1: RESERVED: answer tags: {}"
+ },
+ "criteria.parse|response <= b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  <=  tags: {}\n0: RESERVED: response tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|response = answer": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "EQUALITY:  =  tags: {}\n0: RESERVED: response tags: {}\n1: RESERVED: answer tags: {}"
+ },
+ "criteria.parse|response = b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "EQUALITY:  =  tags: {}\n0: RESERVED: response tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|response = b*answer": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "EQUALITY:  =  tags: {}\n0: RESERVED: response tags: {}\n1: OTHER: b*answer tags: {}"
+ },
+ "criteria.parse|response = q where q = a*b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "WHERE:  where  tags: {}\n0: EQUALITY:  =  tags: {}\n|   0: RESERVED: response tags: {}\n|   1: OTHER: q tags: {}\n1: EQUALITY:  =  tags: {}\n    0: OTHER: q tags: {}\n    1: OTHER: a*b tags: {}"
+ },
+ "criteria.parse|response = q+p where q = a*b; p = b*c": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "WHERE:  where  tags: {}\n0: EQUALITY:  =  tags: {}\n|   0: RESERVED: response tags: {}\n|   1: OTHER: q+p tags: {}\n1: SEPARATOR: ;  tags: {}\n    0: EQUALITY:  =  tags: {}\n    |   0: OTHER: q tags: {}\n    |   1: OTHER: a*b tags: {}\n    1: EQUALITY:  =  tags: {}\n        0: OTHER: p tags: {}\n        1: OTHER: b*c tags: {}"
+ },
+ "criteria.parse|response > answer": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  >  tags: {}\n0: RESERVED: response tags: {}\n1: RESERVED: answer tags: {}"
+ },
+ "criteria.parse|response > b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  >  tags: {}\n0: RESERVED: response tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|response >= answer": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  >=  tags: {}\n0: RESERVED: response tags: {}\n1: RESERVED: answer tags: {}"
+ },
+ "criteria.parse|response >= b": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "ORDER:  >=  tags: {}\n0: RESERVED: response tags: {}\n1: OTHER: b tags: {}"
+ },
+ "criteria.parse|response contains a": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "CONTAINS:  contains  tags: {}\n0: RESERVED: response tags: {}\n1: OTHER: a tags: {}"
+ },
+ "criteria.parse|response proportional to answer": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "PROPORTIONAL_TO:  proportional to  tags: {}\n0: RESERVED: response tags: {}\n1: RESERVED: answer tags: {}"
+ },
+ "criteria.parse|response written as a*b*c": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "WRITTEN_AS:  written as  tags: {}\n0: RESERVED: response tags: {}\n1: OTHER: a*b*c tags: {}"
+ },
+ "criteria.parse|response written as answer": {
+  "reason": "slr_parsing: ExprNode.__str__ shows single tags; empty tags print as 'tags: {}' (was 'tags:  {}')",
+  "value": "WRITTEN_AS:  written as  tags: {}\n0: RESERVED: response tags: {}\n1: RESERVED: answer tags: {}"
+ }
+}

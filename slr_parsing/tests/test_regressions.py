@@ -38,7 +38,6 @@ class TestExprNodeTags:
         parent.tags.add("Y")
         assert child.tags == {"X"}
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: ExprNode.__str__ hides tags unless there are two or more")
     def test_str_shows_a_single_tag(self):
         node = leaf("A")
         node.tags = {"X"}
