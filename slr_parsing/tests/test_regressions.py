@@ -10,6 +10,7 @@ from compareexpressions.slr_parsing import (
     group,
     new_root_on_error,
     operate,
+    tag_transfer,
 )
 
 
@@ -18,19 +19,24 @@ def leaf(label, content="x"):
 
 
 class TestExprNodeTags:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: ExprNode(tags=set()) default is shared by all nodes")
     def test_nodes_without_tag_handler_do_not_share_tags(self):
         a, b = leaf("A"), leaf("B")
         a.tags.add("X")
         assert b.tags == set()
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: ExprNode.copy() shares the tags set")
     def test_copy_does_not_share_tags(self):
         node = leaf("A")
         node.tags.add("X")
         clone = node.copy()
         clone.tags.add("Y")
         assert node.tags == {"X"}
+
+    def test_inherited_tags_are_not_shared_with_the_child(self):
+        child = leaf("A")
+        child.tags.add("X")
+        parent = ExprNode(Token("P", "p", "p", 0, 0), [child], tag_handler=tag_transfer)
+        parent.tags.add("Y")
+        assert child.tags == {"X"}
 
     @pytest.mark.xfail(strict=True, reason="v0.1 bug: ExprNode.__str__ hides tags unless there are two or more")
     def test_str_shows_a_single_tag(self):

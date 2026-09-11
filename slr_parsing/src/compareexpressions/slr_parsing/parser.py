@@ -189,7 +189,7 @@ def tag_rule_intersection(x, y):
 def tag_transfer(node, rule=tag_rule_union):
     tags = set()
     if len(node.children) > 0:
-        tags = node.children[0].tags
+        tags = set(node.children[0].tags)
         for child in node.children[1:]:
             tags = rule(tags, child.tags)
     return tags
@@ -358,7 +358,7 @@ class Token:
 
 class ExprNode(Token):
 
-    def __init__(self, token, children, tag_handler=None, tags=set(), traverse_step=traverse_prefix):
+    def __init__(self, token, children, tag_handler=None, tags=None, traverse_step=traverse_prefix):
         super().__init__(token.label, token.content, token.original, token.start, token.end)
         self.tags = set()
         self.children = []
@@ -373,7 +373,7 @@ class ExprNode(Token):
         if tag_handler is not None:
             self.tags = tag_handler(self)
         else:
-            self.tags = tags
+            self.tags = set(tags) if tags is not None else set()
         return
 
     def copy(self):
