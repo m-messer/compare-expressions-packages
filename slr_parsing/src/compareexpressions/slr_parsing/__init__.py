@@ -8,7 +8,6 @@ from .parser import (
     # Scanner / parser building blocks
     catch_undefined,
     proceed,
-    package,
     append,
     append_last,
     join,
@@ -34,7 +33,6 @@ from .parser import (
     traverse_group,
     # Error handling
     new_root_on_error,
-    discard_output_until_on_error,
     # Parser generator
     SLR_expression_parser,
     # Classes
@@ -46,7 +44,6 @@ from .parser import (
 __all__ = [
     "catch_undefined",
     "proceed",
-    "package",
     "append",
     "append_last",
     "join",
@@ -69,7 +66,6 @@ __all__ = [
     "traverse_infix",
     "traverse_group",
     "new_root_on_error",
-    "discard_output_until_on_error",
     "SLR_expression_parser",
     "Token",
     "ExprNode",

@@ -23,17 +23,6 @@ def proceed(production, output, tag_handler):
     return output
 
 
-def package(production, output, tag_handler):
-    label = production[0].label
-    handle = production[1]
-    children = output[-len(handle):]
-    output = output[0:(-len(handle))]
-    package_content = "".join(str(children))
-    new_package = ExprNode(Token(label, package_content, children[0].original, children[0].start, children[0].end), children, tag_handler=tag_handler)
-    output.append(new_package)
-    return output
-
-
 def append(production, output, tag_handler):
     handle = production[1]
     children = output[1-len(handle):]
@@ -258,14 +247,6 @@ def new_root_on_error(parser, stack, a, input_tokens, tokens, output):
     a = parser.end_token
     return stack, a, input_tokens, tokens, output
 
-
-def discard_output_until_on_error(condition):
-    def error(parser, stack, a, input_tokens, tokens, output):
-        while not condition(output[-1]):
-            output.pop()
-        a = parser.end_token
-        return stack, a, input_tokens, tokens, output
-    return error
 
 # --------------------------
 # Parser generator utilities
