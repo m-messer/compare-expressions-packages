@@ -29,3 +29,19 @@ python -m venv .venv && . .venv/bin/activate
 pip install -e slr_parsing -e evaluation_result -e criteria \
             -e expression_parsing -e units
 ```
+
+## Tests
+
+Each package has its own `tests/` suite (468 tests total). `expression_parsing`
+and `units` reuse the relevant suites ported from compareExpressions;
+`slr_parsing`, `evaluation_result` and `criteria` have fresh native suites.
+Install the `test` extra and run pytest per package:
+
+```bash
+pip install -e "expression_parsing[test]"
+cd expression_parsing && pytest        # repeat per package
+```
+
+Vendored fixtures (`tests/_fixtures.py`) hold the small pieces of test data that
+previously lived in compareExpressions' core-evaluation tests, so the suites do
+not depend on the app layer.

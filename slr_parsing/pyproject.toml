@@ -9,6 +9,9 @@ description = "Generic SLR(1) parser engine extracted from compareExpressions."
 requires-python = ">=3.8"
 dependencies = []
 
+[project.optional-dependencies]
+test = ["pytest"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["slr_parsing*"]
