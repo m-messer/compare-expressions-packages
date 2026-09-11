@@ -37,9 +37,9 @@ Baseline before the refactor: **468 tests pass** (10 slr_parsing, 7 evaluation_r
 
 ## Verification
 
-- [ ] Before Phase 1: save a JSON snapshot of outputs on `main` for every carried-over test input (`parse_expression` str/latex, both `preview_function`s, quantity value/unit/standard forms).
-- [ ] After each package: diff against the snapshot. The only allowed differences are listed bug fixes, each noted in the changelog.
-- [ ] `ruff check`, `ruff format --check`, `mypy` and `pytest` pass for all packages on 3.11, 3.12 and 3.13.
+- [x] Before Phase 1: save a JSON snapshot of outputs for every carried-over test input (`parse_expression` str/latex, both `preview_function`s, quantity value/unit/standard forms). This is `tools/parity/baseline.json` (3221 probes).
+- [ ] After each package: `poetry run python tools/parity/check.py` passes. The only allowed differences are listed in `tools/parity/expected_changes.json`, each noted in the changelog.
+- [ ] `ruff check`, `ruff format --check`, `mypy` and `scripts/test.sh` pass for all packages on 3.11 and 3.12 (3.13 is blocked; see Risks).
 - [ ] No `SyntaxWarning`s; no `print(` or `eval(` left in `src/`.
 - [ ] Adoption smoke test: `parse_quantity("2 kg m/s^2", QuantityParams.from_dict({...}))` → `2 | kilogram metre/second^2`, and both `preview_function`s return a valid `lf_toolkit.preview.Result`.
 
@@ -47,4 +47,5 @@ Baseline before the refactor: **468 tests pass** (10 slr_parsing, 7 evaluation_r
 
 - **lf_toolkit is git-only**, so these packages can't go on PyPI until it is published. Importing `lf_toolkit.shared` also pulls in its server stack (anyio, ujson, jsonrpcserver) through `lf_toolkit/__init__.py`. Worth raising upstream.
 - **Parity with compareExpressions:** several bug fixes change results for some inputs. The changelogs list each one so adoption can re-run compareExpressions' 3128-test suite with them in mind.
-- **Poetry path-dependency enrichment** in PEP 621 mode needs checking in Phase 0. The fallback is Poetry-native dependencies per package, with path dependencies only in the root dev project.
+- ~~Poetry path-dependency enrichment~~: checked in Phase 0. Built wheels carry only plain requirements.
+- **Python 3.13 is blocked** for `expression_parsing` and `units`: latex2sympy2 pins `antlr4-python3-runtime` 4.7.2, which imports `typing.io`, removed in 3.13. Both the PyPI release and the lambda-feedback fork are affected. Lifting this needs latex2sympy regenerated with a newer ANTLR (upstream work).

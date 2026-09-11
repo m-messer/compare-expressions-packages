@@ -2,46 +2,77 @@
 
 Reusable packages extracted from the
 [compareExpressions](https://github.com/lambda-feedback/compareExpressions)
-evaluation function. Each package is independently installable and self-contained;
-the app-specific *core evaluation* logic stays in compareExpressions.
+evaluation function. Each package is independently installable; together they
+share the `compareexpressions` namespace. The app-specific *core evaluation*
+logic stays in compareExpressions.
+
+> **Refactor in progress** on branch `refactor/package-tidy`. See
+> [`docs/refactor/`](docs/refactor/README.md) for the plan and per-package
+> checklists. APIs are changing; each package's `CHANGELOG.md` records the
+> old → new names.
 
 ## Packages
 
-| Package | Import name | Responsibility | Depends on |
-|---|---|---|---|
-| `slr_parsing` | `slr_parsing` | Generic SLR(1) parser engine | — |
-| `evaluation_result` | `evaluation_result` | Evaluation result container | — |
-| `criteria` | `criteria` | Criteria DSL parser + evaluation graph | `slr_parsing` |
-| `expression_parsing` | `expression_parsing` | SymPy parsing / preprocessing / LaTeX preview | `slr_parsing`, `sympy`, `latex2sympy2` |
-| `units` | `units` | Unit-system data, physical-quantity parsing, dimensional analysis | `slr_parsing`, `expression_parsing`, `sympy` |
+| Directory | Distribution | Import | Responsibility | Depends on |
+|---|---|---|---|---|
+| `slr_parsing` | `compareexpressions-slr-parsing` | `compareexpressions.slr_parsing` | Generic SLR(1) parser engine | — |
+| `criteria` | `compareexpressions-criteria` | `compareexpressions.criteria` | Criteria DSL parser and evaluation graph | `slr_parsing` |
+| `expression_parsing` | `compareexpressions-expression-parsing` | `compareexpressions.expression_parsing` | SymPy parsing, preprocessing and LaTeX preview | `slr_parsing`, `sympy`, `latex2sympy2` |
+| `units` | `compareexpressions-units` | `compareexpressions.units` | Unit-system data, physical-quantity parsing and dimensional analysis | `slr_parsing`, `expression_parsing`, `sympy` |
+| `evaluation_result` | `compareexpressions-evaluation-result` | `compareexpressions.evaluation_result` | Evaluation result container (**to be retired** in favour of `lf_toolkit.evaluation.Result`) | — |
+
+Each package uses a `src/` layout: `units/src/compareexpressions/units/`.
+There is deliberately no `compareexpressions/__init__.py`; the namespace is
+[PEP 420](https://peps.python.org/pep-0420/), so the separately installed
+packages merge under one import root.
+
+Python 3.11–3.12 is supported. `expression_parsing` and `units` can't run on
+3.13 yet: latex2sympy2 pins `antlr4-python3-runtime` 4.7.2, which imports the
+`typing.io` module removed in Python 3.13.
+
+## Development
+
+The repo root is a non-package [Poetry](https://python-poetry.org/) project
+that installs every package in develop mode, plus the tooling, into one venv:
+
+```bash
+poetry install                      # creates the venv with all packages + dev tools
+poetry run scripts/test.sh -q       # every package's tests (one pytest process each)
+poetry run pytest units/tests       # a single package
+poetry run ruff check . && poetry run ruff format --check .
+poetry run mypy
+poetry run python tools/parity/check.py   # diff behaviour against the v0.1 baseline
+```
+
+Each package's tests run in their own pytest process, because every package
+has a `tests` package and one process can't import two packages with the same
+name.
+
+Ruff and mypy cover a package once its refactor phase lands. The
+`extend-exclude` list and the mypy `files` list in the root `pyproject.toml`
+record which packages are covered so far.
+
+### Parity check
+
+`tools/parity/baseline.json` holds 3221 probe outputs captured from the v0.1
+extraction (`tools/parity/capture_v0_1.py`). `tools/parity/check.py` rebuilds
+the same probes through the current API. Any difference fails, unless it is
+listed in `tools/parity/expected_changes.json` with its reason and exact new
+value (bug fixes only).
+
+## Building
+
+Each package builds on its own:
+
+```bash
+cd units && poetry build
+```
+
+During development, sibling dependencies resolve from the monorepo as path
+dependencies. The published metadata keeps plain version requirements.
 
 ## Feedback decoupling
 
-The parsing/units code was decoupled from compareExpressions' feedback strings.
-Instead of resolving feedback text inline, functions surface an
-`expression_parsing.FeedbackTag(tag, inputs)` namedtuple. Consumers own the
-`tag -> string` mapping.
-
-## Install (editable, in dependency order)
-
-```bash
-python -m venv .venv && . .venv/bin/activate
-pip install -e slr_parsing -e evaluation_result -e criteria \
-            -e expression_parsing -e units
-```
-
-## Tests
-
-Each package has its own `tests/` suite (468 tests total). `expression_parsing`
-and `units` reuse the relevant suites ported from compareExpressions;
-`slr_parsing`, `evaluation_result` and `criteria` have fresh native suites.
-Install the `test` extra and run pytest per package:
-
-```bash
-pip install -e "expression_parsing[test]"
-cd expression_parsing && pytest        # repeat per package
-```
-
-Vendored fixtures (`tests/_fixtures.py`) hold the small pieces of test data that
-previously lived in compareExpressions' core-evaluation tests, so the suites do
-not depend on the app layer.
+The parsing/units code does not resolve feedback text itself. Functions surface
+an `expression_parsing.FeedbackTag(tag, inputs)`, and consumers own the
+`tag -> string` mapping. See [`NOTES.md`](NOTES.md).

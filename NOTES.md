@@ -31,6 +31,10 @@ pip install -e slr_parsing -e evaluation_result -e criteria \
             -e expression_parsing -e units
 ```
 
+*(As extracted. Since the refactor, the packages live under the
+`compareexpressions.*` namespace and install via Poetry; see
+[Refactor](#refactor-stage-2) below and the README.)*
+
 ---
 
 ## 1. Back-dependency on app feedback strings (main issue)
@@ -125,3 +129,32 @@ unchanged to keep the extraction a faithful copy.
 Adopting these packages back into compareExpressions: rewire `app/` imports to
 the packages and add the `tag -> string` resolution at the consumer boundary
 using the existing `app/feedback/*` generators.
+
+---
+
+## Refactor (stage 2)
+
+The extraction deliberately kept the code verbatim. Stage 2 reshapes the
+packages before compareExpressions adopts them. The plan and per-package
+checklists are in [`docs/refactor/`](docs/refactor/README.md); the key
+decisions are:
+
+- **Break APIs freely**, since nothing depends on the packages yet. PEP 8
+  names and typed data replace positional tuples and free-form `params`
+  dicts. Each package's `CHANGELOG.md` records old → new.
+- **Fix latent bugs**, each with a regression test. The bugs include inputs
+  that currently crash or mis-parse (`2E`, `2 litres` → litre·second,
+  `(2 m) s`), in-place mutation of caller `params`, and `eval()` of
+  author-supplied `symbol_assumptions`.
+- **Namespace + layout:** `compareexpressions.<pkg>` (PEP 420), `src/` layout,
+  Poetry, with a root dev environment.
+- **Retire `evaluation_result`** in favour of `lf_toolkit.evaluation.Result`
+  from [toolkit-python](https://github.com/lambda-feedback/toolkit-python).
+  `expression_parsing`, `units` and `criteria` take `Params`/`SymbolDict`/
+  `Preview`/`Result` from lf_toolkit, which is a git dependency because it
+  isn't on PyPI.
+- **Python 3.11–3.12.** 3.13 is blocked by latex2sympy2's pin on
+  `antlr4-python3-runtime` 4.7.2.
+
+Behaviour is guarded by a parity baseline (`tools/parity/`) captured from the
+extracted v0.1 code. Only listed bug fixes may change outputs.
