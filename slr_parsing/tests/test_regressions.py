@@ -77,7 +77,6 @@ class TestParserConstruction:
 
 
 class TestErrorRecovery:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: parse() crashes on tokens left after ACCEPT")
     def test_new_root_on_error_starts_a_new_root_at_the_offending_token(self):
         parser = SLR_expression_parser(
             infix_operators=[("+", "ADD")],
