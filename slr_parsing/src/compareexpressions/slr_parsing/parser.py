@@ -445,8 +445,7 @@ class SLR_Parser:
             f"{'-'*m}")
 
     def __init__(self, token_list, productions, start_symbol, end_symbol, null_symbol, error_handler=[], tag_handler=tag_transfer):
-        self.token_list = token_list
-        self.token_list.sort(key=lambda x: -len(x[0]))
+        self.token_list = sorted(token_list, key=lambda x: -len(x[0]))
         self.productions = productions
         self.start_symbol = start_symbol
         self.end_symbol = end_symbol

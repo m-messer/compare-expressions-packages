@@ -59,9 +59,8 @@ class TestExpressionParserBuilder:
 
 
 class TestParserConstruction:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: SLR_Parser sorts the caller's token_list in place")
     def test_token_list_argument_is_not_mutated(self):
-        token_list = [("START", "START"), ("END", "END"), ("NULL", "NULL"), (" *\\+ *", "ADD"), ("x", "X")]
+        token_list = [("START", "START"), ("END", "END"), ("NULL", "NULL"), ("E", "E"), (" *\\+ *", "+"), ("x", "x")]
         before = list(token_list)
         SLR_Parser(token_list, [("START", "E", None), ("E", "E+E", None), ("E", "x", None)], "START", "END", "NULL")
         assert token_list == before
