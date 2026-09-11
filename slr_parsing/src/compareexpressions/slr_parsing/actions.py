@@ -1,113 +1,124 @@
-"""Reduction actions: build the output tree when a production is reduced."""
+"""Reduction actions: build the output tree when a production is reduced.
 
+Every action has the signature ``action(production, output, tag_handler) ->
+output`` (see :data:`~compareexpressions.slr_parsing.grammar.Action`); the
+functions taking parameters (``group``, ``operate``, ...) return one.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import Any
+
+from .grammar import Action, TagHandler, TokenProduction
 from .tokens import ExprNode, Token, traverse_group, traverse_infix
 
 
-def proceed(production, output, tag_handler):
+def _as_nodes(items: list[Any], tag_handler: TagHandler | None) -> list[ExprNode]:
+    return [item if isinstance(item, ExprNode) else ExprNode(item, [], tag_handler=tag_handler) for item in items]
+
+
+def proceed(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
+    """Leave the output unchanged."""
     return output
 
 
-def append(production, output, tag_handler):
-    handle = production[1]
-    children = output[1-len(handle):]
-    output = output[0:(1-len(handle))]
+def append(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
+    """Append the rest of the body's items as children of its first item."""
+    body_length = len(production[1])
+    children = output[1 - body_length :]
+    output = output[: 1 - body_length]
     output[-1].children += children
     return output
 
 
-def append_last(production, output, tag_handler):
-    handle = production[1]
+def append_last(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
+    """Append the body's last item as a child of its first; drop the items between."""
     last = output[-1]
-    output = output[0:(1-len(handle))]
+    output = output[: 1 - len(production[1])]
     output[-1].children.append(last)
     return output
 
 
-def join(production, output, tag_handler):
-    label = production[0].label
-    handle = production[1]
-    content = []
-    for node in output[-len(handle):]:
-        try:
-            content.append(node.content_string())
-        except Exception:
-            content.append(node.content)
-    joined_content = "".join(content)
+def join(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
+    """Merge the body's items into its first item, relabelled as the production head."""
+    body_length = len(production[1])
+    content = [item.content_string() if isinstance(item, ExprNode) else item.content for item in output[-body_length:]]
     joined_end = output[-1].end
-    output = output[0:(1-len(handle))]
-    output[-1].label = label
-    output[-1].content = joined_content
+    output = output[: 1 - body_length]
+    output[-1].label = production[0].label
+    output[-1].content = "".join(content)
     output[-1].end = joined_end
     return output
 
 
-def create_node(production, output, tag_handler):
-    a = output.pop()
-    node = ExprNode(a, [], tag_handler=tag_handler)
-    output.append(node)
+def create_node(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
+    """Wrap the last item in a new tree node."""
+    output.append(ExprNode(output.pop(), [], tag_handler=tag_handler))
     return output
 
 
-def relabel(production, output, tag_handler):
+def relabel(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
+    """Replace the last item with a plain token labelled as the production head."""
     a = output.pop()
     output.append(Token(production[0].label, a.content, a.original, a.start, a.end))
     return output
 
 
-def group(number_of_elements, empty=False, delimiters=["", ""]):
+def group(number_of_elements: int, empty: bool = False, delimiters: Sequence[str] = ("", "")) -> Action:
+    """Action wrapping the last ``number_of_elements`` items in a ``GROUP`` node.
+
+    With ``empty=False`` the items are enclosed by delimiter tokens in the
+    body, which become the group's content. With ``empty=True`` there are no
+    delimiter tokens and ``delimiters`` supplies the content instead.
+    """
     if number_of_elements < 1:
         raise ValueError("Groups must have at least one element.")
 
-    def wrap(production, output, tag_handler):
+    def wrap(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
         if empty:
             content = output[-number_of_elements:]
-            output = output[0:-number_of_elements]
-            end_delim = Token("START_DELIMITER", delimiters[1], content[0].original, content[0].start, content[0].end)
-            start_delim = Token("END_DELIMITER", delimiters[0], content[0].original, content[0].start, content[0].end)
+            output = output[:-number_of_elements]
+            first = content[0]
+            start_delim = Token("START_DELIMITER", delimiters[0], first.original, first.start, first.end)
+            end_delim = Token("END_DELIMITER", delimiters[1], first.original, first.start, first.end)
         else:
             end_delim = output.pop()
             content = output[-number_of_elements:]
-            output = output[0:-number_of_elements]
+            output = output[:-number_of_elements]
             start_delim = output.pop()
-        for k, elem in enumerate(content):
-            if isinstance(elem, Token) and not isinstance(elem, ExprNode):
-                content[k] = ExprNode(elem, [], tag_handler=tag_handler)
-        output.append(
-            ExprNode(
-                Token(
-                    "GROUP",
-                    [start_delim.content, end_delim.content],
-                    content[0].original,
-                    start_delim.start, end_delim.end
-                    ),
-                content, traverse_step=traverse_group, tag_handler=tag_handler)
-            )
+        children = _as_nodes(content, tag_handler)
+        token = Token(
+            "GROUP", [start_delim.content, end_delim.content], children[0].original, start_delim.start, end_delim.end
+        )
+        output.append(ExprNode(token, children, traverse_step=traverse_group, tag_handler=tag_handler))
         return output
 
     return wrap
 
 
-def operate(number_of_elements, empty=False):
+def operate(number_of_elements: int, empty: bool = False) -> Action:
+    """Action applying an operation token to the last ``number_of_elements`` items.
+
+    The body is ``operation ( args )`` (or ``operation args`` with
+    ``empty=True``); the operation token becomes the node, the arguments its
+    children.
+    """
     # Zero is rejected too: output[-0:] would take the entire output stack.
     if number_of_elements < 1:
         raise ValueError("Operations must have at least one argument.")
 
-    def wrap(production, output, tag_handler):
+    def wrap(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
         if empty:
             end_index = output[-1].end
             content = output[-number_of_elements:]
-            output = output[0:-number_of_elements]
+            output = output[:-number_of_elements]
         else:
-            end_delim = output.pop()
-            end_index = end_delim.end
+            end_index = output.pop().end
             content = output[-number_of_elements:]
-            output = output[0:-number_of_elements]
-            _ = output.pop()
-        for k, elem in enumerate(content):
-            if isinstance(elem, Token) and not isinstance(elem, ExprNode):
-                content[k] = ExprNode(elem, [], tag_handler=tag_handler)
-        operation = output.pop()
-        node = ExprNode(operation, content, tag_handler=tag_handler)
+            output = output[:-number_of_elements]
+            output.pop()  # start delimiter
+        node = ExprNode(output.pop(), _as_nodes(content, tag_handler), tag_handler=tag_handler)
         node.end = end_index
         output.append(node)
         return output
@@ -115,7 +126,8 @@ def operate(number_of_elements, empty=False):
     return wrap
 
 
-def infix(production, output, tag_handler):
+def infix(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
+    """Build an operator node from ``left operator right``."""
     right = output.pop()
     operator = output.pop()
     left = output.pop()
@@ -123,28 +135,35 @@ def infix(production, output, tag_handler):
     return output
 
 
-def insert_infix(content, label):
-    def apply(production, output, tag_handler):
+def insert_infix(content: str, label: str) -> Action:
+    """Action inserting an implicit ``label`` operator between the last two items."""
+
+    def apply(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
         operator_token = Token(label, content, output[-1].original, len(output[-1].original), -1)
-        return infix(production, output[0:-1]+[operator_token]+[output[-1]], tag_handler=tag_handler)
+        return infix(production, [*output[:-1], operator_token, output[-1]], tag_handler=tag_handler)
+
     return apply
 
 
-def compose(*funcs):
-    def composed_functions(production, output, tag_handler):
-        for f in reversed(funcs):
-            output = f(production, output, tag_handler)
+def compose(*actions: Action) -> Action:
+    """Action applying ``actions`` right to left (like function composition)."""
+
+    def composed(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
+        for action in reversed(actions):
+            output = action(production, output, tag_handler)
         return output
-    return composed_functions
+
+    return composed
 
 
-def flatten(production, output, tag_handler):
+def flatten(production: TokenProduction, output: list[Any], tag_handler: TagHandler | None) -> list[Any]:
+    """Splice children equal to the last node (same label and content) into it."""
     node = output[-1]
-    flattened_children = []
+    flattened: list[ExprNode] = []
     for child in node.children:
         if node.label == child.label and node.content == child.content:
-            flattened_children += child.children
+            flattened += child.children
         else:
-            flattened_children.append(child)
-    node.children = flattened_children
+            flattened.append(child)
+    node.children = flattened
     return output

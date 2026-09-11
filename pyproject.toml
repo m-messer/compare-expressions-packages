@@ -29,7 +29,6 @@ line-length = 120
 # (see docs/refactor/). tools/parity/capture_v0_1.py targets the frozen
 # v0.1 API and is kept verbatim.
 extend-exclude = [
-    "slr_parsing",
     "evaluation_result",
     "criteria",
     "expression_parsing",
@@ -53,7 +52,7 @@ known-first-party = ["compareexpressions"]
 [tool.mypy]
 python_version = "3.11"
 # Packages are added here as their refactor phase lands (see docs/refactor/).
-files = ["tools/parity/corpus.py", "tools/parity/check.py"]
+files = ["tools/parity/corpus.py", "tools/parity/check.py", "slr_parsing/src"]
 namespace_packages = true
 explicit_package_bases = true
 mypy_path = [
@@ -72,9 +71,23 @@ warn_unused_ignores = true
 # Each package leaves this list in its refactor phase.
 [[tool.mypy.overrides]]
 module = [
-    "compareexpressions.slr_parsing.*",
     "compareexpressions.criteria.*",
     "compareexpressions.expression_parsing.*",
     "compareexpressions.units.*",
 ]
 follow_imports = "silent"
+
+# Strict checking, spelled out: `strict` itself is global-only.
+[[tool.mypy.overrides]]
+module = ["compareexpressions.slr_parsing", "compareexpressions.slr_parsing.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+check_untyped_defs = true
+warn_return_any = true
+no_implicit_reexport = true
+strict_equality = true
+extra_checks = true

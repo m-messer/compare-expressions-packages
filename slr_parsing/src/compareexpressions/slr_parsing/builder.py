@@ -1,64 +1,76 @@
-"""Generic expression-parser builder on top of SLRParser."""
+"""Generic expression-parser builder on top of :class:`SLRParser`."""
+
+from __future__ import annotations
 
 import re
+from collections.abc import Sequence
+from typing import Any
 
 from .actions import create_node, infix, relabel
-from .grammar import catch_undefined
+from .grammar import Action, ErrorHandler, TokenSpec, catch_undefined
 from .parser import SLRParser
 
 
-def build_expression_parser(nodes=[], infix_operators=[], delimiters=[], undefined=None, custom_tokens=[], custom_productions=[], group_node=None, expression_node=None, start=None, null=None, end=None, error_handler=[]):
-    infix_operators_dictionary = dict()
-    unique_infix_operator_symbols = []
-    for (symbol, label) in infix_operators:
-        if label in infix_operators_dictionary.keys():
-            infix_operators_dictionary[label] += [symbol]
-        else:
-            unique_infix_operator_symbols += [symbol]
-            infix_operators_dictionary.update({label: [symbol]})
-    infix_operators_token = []
-    for (label, symbols) in infix_operators_dictionary.items():
-        infix_operators_token.append(((" *("+"|".join([re.escape(s) for s in symbols])+") *"), label))
+def build_expression_parser(
+    nodes: Sequence[TokenSpec] = (),
+    infix_operators: Sequence[tuple[str, str]] = (),
+    delimiters: Sequence[tuple[tuple[str, str], Action]] = (),
+    undefined: tuple[str, str] | None = None,
+    custom_tokens: Sequence[TokenSpec] = (),
+    custom_productions: Sequence[tuple[str, str, Action | None]] = (),
+    expression_node: tuple[str, str] | None = None,
+    start: tuple[str, str] | None = None,
+    null: tuple[str, str] | None = None,
+    end: tuple[str, str] | None = None,
+    error_handler: Sequence[ErrorHandler | tuple[Any, Any]] = (),
+) -> SLRParser:
+    """Build a parser for expressions made of operands, infix operators and delimiters.
 
-    if undefined is None:
-        undefined_symbol = "UNDEFINED"
-        undefined = (undefined_symbol, undefined_symbol, catch_undefined)
-    else:
-        undefined += (catch_undefined,)
+    The grammar has one expression nonterminal (``expression_node``, default
+    ``EXPRESSION_NODE``) with productions ``E -> node`` for each of ``nodes``
+    and for undefined text, ``E -> E op E`` for each ``(symbol, label)`` in
+    ``infix_operators`` and ``E -> open E close`` for each
+    ``((open, close), action)`` in ``delimiters``. ``custom_tokens`` and
+    ``custom_productions`` extend the grammar; later productions win
+    conflicts. All delimiter pairs share the ``START_DELIMITER`` and
+    ``END_DELIMITER`` labels, so the grammar does not distinguish between
+    pairs (the last pair's action is used, and mixed pairs such as ``(x]``
+    are accepted).
 
-    if expression_node is None:
-        expression_node_symbol = "EXPRESSION_NODE"
-        expression_node = (expression_node_symbol, expression_node_symbol, None)
-    else:
-        expression_node += (None,)
+    ``undefined``, ``expression_node``, ``start``, ``null`` and ``end`` are
+    ``(symbol, label)`` pairs overriding the default symbols; ``undefined``
+    labels runs of text no other token matches (default ``UNDEFINED``).
+    """
+    labels_to_symbols: dict[str, list[str]] = {}
+    for symbol, label in infix_operators:
+        labels_to_symbols.setdefault(label, []).append(symbol)
+    # One production per operator label, written with its first symbol.
+    operator_symbols = [symbols[0] for symbols in labels_to_symbols.values()]
+    operator_tokens = [
+        (" *(" + "|".join(re.escape(s) for s in symbols) + ") *", label) for label, symbols in labels_to_symbols.items()
+    ]
 
-    if group_node is None:
-        group_node_symbol = "GROUP_NODE"
-        group_node = (group_node_symbol, group_node_symbol, None)
+    undefined_spec = (*(undefined or ("UNDEFINED", "UNDEFINED")), catch_undefined)
+    # A third element of None keeps the node symbol out of the scanner.
+    expression_spec = (*(expression_node or ("EXPRESSION_NODE", "EXPRESSION_NODE")), None)
+    start = start or ("START", "START")
+    end = end or ("END", "END")
+    null = null or ("NULL", "NULL")
+    e = expression_spec[0]
 
-    if start is None:
-        start_symbol = "START"
-        start = (start_symbol, start_symbol)
+    token_list: list[TokenSpec] = [undefined_spec, null, expression_spec, start, end, *nodes, *operator_tokens]
+    token_list += custom_tokens
 
-    if end is None:
-        end_symbol = "END"
-        end = (end_symbol, end_symbol)
-
-    if null is None:
-        null_symbol = "NULL"
-        null = (null_symbol, null_symbol)
-
-    token_list = [undefined, null, expression_node, start, end]+nodes+infix_operators_token+custom_tokens
-
-    productions = [(start[0], expression_node[0], relabel)]
-    productions += [(expression_node[0], n[0], create_node) for n in nodes]
-    productions += [(expression_node[0], undefined[0], create_node)]
-    productions += [(expression_node[0], expression_node[0]+operator+expression_node[0], infix) for operator in unique_infix_operator_symbols]
-
-    for (delims, action) in delimiters:
-        token_list += [(re.escape(delims[0])+" *", "START_DELIMITER"), (" *"+re.escape(delims[1]), "END_DELIMITER")]
-        productions += [(expression_node[0], delims[0]+expression_node[0]+delims[1], action)]
-
+    productions: list[tuple[str, str, Action | None]] = [(start[0], e, relabel)]
+    productions += [(e, node[0], create_node) for node in nodes]
+    productions += [(e, undefined_spec[0], create_node)]
+    productions += [(e, e + operator + e, infix) for operator in operator_symbols]
+    for (open_delimiter, close_delimiter), action in delimiters:
+        token_list += [
+            (re.escape(open_delimiter) + " *", "START_DELIMITER"),
+            (" *" + re.escape(close_delimiter), "END_DELIMITER"),
+        ]
+        productions += [(e, open_delimiter + e + close_delimiter, action)]
     productions += custom_productions
 
     return SLRParser(token_list, productions, start[1], end[1], null[1], error_handler=error_handler)

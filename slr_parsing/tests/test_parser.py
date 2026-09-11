@@ -8,8 +8,8 @@ these are written fresh to cover the core building blocks.
 import pytest
 
 from compareexpressions.slr_parsing import (
-    Token,
     ExprNode,
+    Token,
     build_expression_parser,
 )
 
@@ -24,8 +24,8 @@ class TestToken:
         a = Token("NUM", "1", "1", 0, 0)
         b = Token("NUM", "2", "2", 0, 0)
         c = Token("OP", "+", "+", 0, 0)
-        assert a == b          # same label
-        assert a != c          # different label
+        assert a == b  # same label
+        assert a != c  # different label
         assert hash(a) == hash(b)
 
 
@@ -50,7 +50,7 @@ class TestExprNode:
         assert clone.content_string() == node.content_string()
 
     def test_invalid_child_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(TypeError):
             ExprNode(Token("ADD", "+", "+", 0, 0), ["not a token"])
 
 

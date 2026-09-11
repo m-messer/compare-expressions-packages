@@ -4,13 +4,13 @@ import pytest
 
 from compareexpressions.slr_parsing import (
     ExprNode,
-    build_expression_parser,
     SLRParser,
     Token,
+    build_expression_parser,
     group,
+    inherit_tags,
     new_root_on_error,
     operate,
-    inherit_tags,
 )
 
 
@@ -57,11 +57,11 @@ class TestExpressionParserBuilder:
         assert [(t.label, t.content) for t in tokens] == [("OTHER", "2E"), ("ADD", "+"), ("OTHER", "x")]
         assert parser.parse(tokens)[0].content_string() == "2E+x"
 
-
     def test_multi_character_infix_operator(self):
         parser = build_expression_parser(infix_operators=[("**", "POW"), ("+", "ADD")])
         root = parser.parse(parser.scan("a**b+c"))[0]
         assert root.content_string() == "a**b+c"
+
         def labels(node):
             return [node.label] + [label for child in node.children for label in labels(child)]
 

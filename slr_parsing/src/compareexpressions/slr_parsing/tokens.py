@@ -1,127 +1,139 @@
 """Tokens, expression-tree nodes and tree traversal steps."""
 
+from __future__ import annotations
 
-def traverse_prefix(expr_node, action):
-    out = [(True, action(expr_node))]
-    for x in expr_node.children:
-        out += [(False, x)]
-    return out
+from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING, Any, TypeAlias
 
+if TYPE_CHECKING:
+    from .grammar import TagHandler
 
-def traverse_postfix(expr_node, action):
-    out = []
-    for x in expr_node.children:
-        out += [(False, x)]
-    return out+[(True, action(expr_node))]
+TraverseStep: TypeAlias = "Callable[[ExprNode, Callable[[ExprNode], Any]], list[tuple[bool, Any]]]"
+"""Expands a node into ``(is_output, item)`` pairs: an action result to emit
+(``True``) or a child node to traverse next (``False``)."""
 
 
-def traverse_infix(expr_node, action):
-    out = []
-    for x in expr_node.children[0:-1]:
-        out += [(False, x), (True, action(expr_node))]
-    return out+[(False, expr_node.children[-1])]
+def traverse_prefix(expr_node: ExprNode, action: Callable[[ExprNode], Any]) -> list[tuple[bool, Any]]:
+    return [(True, action(expr_node)), *((False, child) for child in expr_node.children)]
 
 
-def traverse_group(expr_node, action):
-    out = [(True, action(expr_node)[0])]
-    for x in expr_node.children:
-        out += [(False, x)]
-    return out+[(True, action(expr_node)[1])]
+def traverse_postfix(expr_node: ExprNode, action: Callable[[ExprNode], Any]) -> list[tuple[bool, Any]]:
+    return [*((False, child) for child in expr_node.children), (True, action(expr_node))]
+
+
+def traverse_infix(expr_node: ExprNode, action: Callable[[ExprNode], Any]) -> list[tuple[bool, Any]]:
+    out: list[tuple[bool, Any]] = []
+    for child in expr_node.children[:-1]:
+        out += [(False, child), (True, action(expr_node))]
+    return [*out, (False, expr_node.children[-1])]
+
+
+def traverse_group(expr_node: ExprNode, action: Callable[[ExprNode], Any]) -> list[tuple[bool, Any]]:
+    """Like prefix traversal, but emits ``action(node)[0]`` before and ``[1]`` after the children."""
+    return [
+        (True, action(expr_node)[0]),
+        *((False, child) for child in expr_node.children),
+        (True, action(expr_node)[1]),
+    ]
 
 
 class Token:
+    """A scanned lexeme, or a grammar symbol.
 
-    def __init__(self, label, content, original, start, end):
+    Tokens compare equal (and hash) by ``label`` only: the parser uses them as
+    grammar symbols, where the content is irrelevant.
+    """
+
+    def __init__(self, label: str, content: Any, original: str, start: int, end: int) -> None:
         self.label = label
         self.content = content
         self.original = original
         self.start = start
         self.end = end
-        return
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, Token) and self.label == other.label
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.label)
 
-    def __str__(self):
-        return str(self.label)+": "+str(self.content)
+    def __str__(self) -> str:
+        return f"{self.label}: {self.content}"
 
-    def __repr__(self):
-        # REMARK(KarlLundengaard): This is not a good repr function, but it means that the most
-        # relevant info is printed in the watch window of my preferred debugger
-        return str(self.label)+": "+str(self.content)
+    # A short repr (rather than a constructor-style one) keeps debugger
+    # watch windows and parser traces readable.
+    __repr__ = __str__
 
 
 class ExprNode(Token):
+    """A node of the expression tree built by the parser."""
 
-    def __init__(self, token, children, tag_handler=None, tags=None, traverse_step=traverse_prefix):
+    def __init__(
+        self,
+        token: Token,
+        children: Iterable[Token],
+        tag_handler: TagHandler | None = None,
+        tags: Iterable[Any] | None = None,
+        traverse_step: TraverseStep = traverse_prefix,
+    ) -> None:
         super().__init__(token.label, token.content, token.original, token.start, token.end)
-        self.tags = set()
-        self.children = []
+        self.children: list[ExprNode] = []
         for child in children:
             if isinstance(child, ExprNode):
                 self.children.append(child)
             elif isinstance(child, Token):
                 self.children.append(ExprNode(child, []))
             else:
-                raise Exception(f"Invalid child {str(child)}")
+                raise TypeError(f"Invalid child {child!s}")
         self._traverse_step = traverse_step
-        if tag_handler is not None:
-            self.tags = tag_handler(self)
-        else:
-            self.tags = set(tags) if tags is not None else set()
-        return
+        self.tags: set[Any] = tag_handler(self) if tag_handler is not None else set(tags or ())
 
-    def copy(self):
+    def copy(self) -> ExprNode:
         token = Token(self.label, self.content, self.original, self.start, self.end)
-        children = []
-        for child in self.children:
-            children.append(child.copy())
+        children = [child.copy() for child in self.children]
         return ExprNode(token, children, tags=self.tags, traverse_step=self._traverse_step)
 
-    def tree_string(self):
+    def tree_string(self) -> str:
         s = str(self)
         for k, child in enumerate(self.children):
-            padding = "\n|   " if k < len(self.children)-1 else "\n    "
-            s += "\n"+str(k)+": "+child.tree_string().replace("\n", padding)
+            padding = "\n|   " if k < len(self.children) - 1 else "\n    "
+            s += f"\n{k}: " + child.tree_string().replace("\n", padding)
         return s
 
-    def content_string(self, max_depth=None):
-        output = self.traverse(lambda x: x.content, max_depth)
-        return "".join(output)
+    def content_string(self, max_depth: int | None = None) -> str:
+        return "".join(self.traverse(lambda node: node.content, max_depth))
 
-    def traverse(self, action, max_depth=None):
-        stack = [x+(0,) for x in self._traverse_step(self, action)[::-1]]
+    def traverse(self, action: Callable[[ExprNode], Any], max_depth: int | None = None) -> list[Any]:
+        """Apply ``action`` to nodes in the order given by each node's traverse step.
+
+        Returns the emitted results; nodes deeper than ``max_depth`` are skipped.
+        """
+        stack = [(*item, 0) for item in reversed(self._traverse_step(self, action))]
         output = []
-        while len(stack) > 0:
-            (is_output, elem, depth) = stack.pop()
+        while stack:
+            is_output, elem, depth = stack.pop()
             if max_depth is None or depth <= max_depth:
                 if is_output:
                     output.append(elem)
                 else:
-                    stack += [x+(depth+1,) for x in elem._traverse_step(elem, action)[::-1]]
+                    stack += [(*item, depth + 1) for item in reversed(elem._traverse_step(elem, action))]
         return output
 
-    def original_string(self):
-        left_children = self.children
-        right_children = self.children
-        start = self.start
-        end = self.end
-        while len(left_children) > 0:
-            start = min(start, left_children[0].start)
-            left_children = left_children[0].children
-        while len(right_children) > 0:
-            end = max(end, right_children[-1].end)
-            right_children = right_children[-1].children
-        return self.original[start:end+1]
+    def original_string(self) -> str:
+        """The slice of the original input spanned by this subtree."""
+        start, end = self.start, self.end
+        left = right = self.children
+        while left:
+            start = min(start, left[0].start)
+            left = left[0].children
+        while right:
+            end = max(end, right[-1].end)
+            right = right[-1].children
+        return self.original[start : end + 1]
 
-    def __str__(self):
-        tags = str(self.tags) if len(self.tags) > 0 else "{}"
-        return str(self.label)+": "+str(self.content)+" tags: "+tags
+    def __str__(self) -> str:
+        tags = str(self.tags) if self.tags else "{}"
+        return f"{self.label}: {self.content} tags: {tags}"
 
-    def __repr__(self):
-        # REMARK(KarlLundengaard): This is not a good repr function, but it means that the most
-        # relevant info is printed in the watch window of my preferred debugger
-        return str(self.label)+": "+str(self.content)+" tags: "+str(self.tags)
+    def __repr__(self) -> str:
+        return f"{self.label}: {self.content} tags: {self.tags}"

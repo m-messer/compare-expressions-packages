@@ -493,7 +493,7 @@ def SLR_quantity_parsing(expr, parameters, parser, name):
     expr = expr.strip()
     tokens = parser.scan(expr)
 
-    quantity = parser.parse(tokens, verbose=False)
+    quantity = parser.parse(tokens)
 
     if len(quantity) > 1:
         raise Exception("Parsed quantity does not have a single root.")

@@ -1,7 +1,12 @@
 """Generic SLR(1) parser engine.
 
-Extracted from compareExpressions (app/utility/slr_parsing_utilities.py).
-Self-contained: depends only on the standard library.
+Build a parser from token specifications and productions with
+:class:`SLRParser` (or :func:`build_expression_parser` for the common
+operand/operator/delimiter shape), then ``parser.parse(parser.scan(text))``.
+See :mod:`compareexpressions.slr_parsing.grammar` for the grammar format.
+
+Extracted from compareExpressions (app/utility/slr_parsing_utilities.py);
+depends only on the standard library.
 """
 
 from .actions import (
@@ -19,53 +24,45 @@ from .actions import (
     relabel,
 )
 from .builder import build_expression_parser
-from .errors import new_root_on_error
-from .grammar import catch_undefined
+from .errors import GrammarError, ParseError, ScanError, SLRError, new_root_on_error
+from .grammar import ErrorHandler, Production, catch_undefined
 from .parser import SLRParser
-from .tags import (
-    add_tag,
-    remove_tag,
-    replace_tag,
-    intersection_rule,
-    union_rule,
-    inherit_tags,
-)
-from .tokens import (
-    ExprNode,
-    Token,
-    traverse_group,
-    traverse_infix,
-    traverse_postfix,
-    traverse_prefix,
-)
+from .tags import add_tag, inherit_tags, intersection_rule, remove_tag, replace_tag, union_rule
+from .tokens import ExprNode, Token, traverse_group, traverse_infix, traverse_postfix, traverse_prefix
 
 __all__ = [
-    "catch_undefined",
-    "proceed",
+    "ErrorHandler",
+    "ExprNode",
+    "GrammarError",
+    "ParseError",
+    "Production",
+    "SLRError",
+    "SLRParser",
+    "ScanError",
+    "Token",
+    "add_tag",
     "append",
     "append_last",
-    "join",
-    "create_node",
-    "relabel",
-    "group",
-    "operate",
-    "infix",
-    "insert_infix",
-    "compose",
-    "flatten",
-    "union_rule",
-    "intersection_rule",
-    "inherit_tags",
-    "remove_tag",
-    "add_tag",
-    "replace_tag",
-    "traverse_prefix",
-    "traverse_postfix",
-    "traverse_infix",
-    "traverse_group",
-    "new_root_on_error",
     "build_expression_parser",
-    "Token",
-    "ExprNode",
-    "SLRParser",
+    "catch_undefined",
+    "compose",
+    "create_node",
+    "flatten",
+    "group",
+    "infix",
+    "inherit_tags",
+    "insert_infix",
+    "intersection_rule",
+    "join",
+    "new_root_on_error",
+    "operate",
+    "proceed",
+    "relabel",
+    "remove_tag",
+    "replace_tag",
+    "traverse_group",
+    "traverse_infix",
+    "traverse_postfix",
+    "traverse_prefix",
+    "union_rule",
 ]
