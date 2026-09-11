@@ -299,7 +299,7 @@ def SLR_expression_parser(nodes=[], infix_operators=[], delimiters=[], undefined
     productions = [(start[0], expression_node[0], relabel)]
     productions += [(expression_node[0], n[0], create_node) for n in nodes]
     productions += [(expression_node[0], undefined[0], create_node)]
-    productions += [(expression_node[0], expression_node[0]+operator+expression_node[0], infix) for operator in [op[0] for op in unique_infix_operator_symbols]]
+    productions += [(expression_node[0], expression_node[0]+operator+expression_node[0], infix) for operator in unique_infix_operator_symbols]
 
     for (delims, action) in delimiters:
         token_list += [(re.escape(delims[0])+" *", "START_DELIMITER"), (" *"+re.escape(delims[1]), "END_DELIMITER")]

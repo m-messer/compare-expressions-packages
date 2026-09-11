@@ -9,6 +9,7 @@ The first release after the extraction refactor. The import path is now `compare
 - `ExprNode` tag sets are no longer shared. Before, every node built without a tag handler shared the mutable default `tags=set()`, `copy()` shared the original's set, and `tag_transfer` returned a single child's own set as its parent's tags. Tagging one node could tag unrelated nodes.
 - `str(ExprNode)` shows the node's tags whenever it has any; it used to hide them unless there were two or more. Empty tags print as `tags: {}` (was `tags:  {}`).
 - A custom `expression_node` passed to the expression-parser builder no longer becomes a literal token. The implicit-multiplication convention parser in `expression_parsing` uses `"E"` as its node symbol, so every capital `E` in an input was scanned as a grammar symbol and inputs such as `2E` or `xE` failed to parse.
+- Multi-character infix operators (such as `**`) work in the expression-parser builder. Its productions were built from only the first character of each operator symbol.
 - `SLR_Parser` no longer sorts the caller's `token_list` in place.
 - `scan()` raises `ValueError` for an unknown `mode` (it used to crash with `UnboundLocalError`), and matches the mode exactly rather than by substring.
 - `group(0)` and `operate(0)` raise `ValueError`. `operate(0)` was accepted and would have consumed the entire output stack.

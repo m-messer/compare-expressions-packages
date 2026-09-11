@@ -58,6 +58,16 @@ class TestExpressionParserBuilder:
         assert parser.parse(tokens)[0].content_string() == "2E+x"
 
 
+    def test_multi_character_infix_operator(self):
+        parser = SLR_expression_parser(infix_operators=[("**", "POW"), ("+", "ADD")])
+        root = parser.parse(parser.scan("a**b+c"))[0]
+        assert root.content_string() == "a**b+c"
+        def labels(node):
+            return [node.label] + [label for child in node.children for label in labels(child)]
+
+        assert sorted(labels(root)) == ["ADD", "POW", "UNDEFINED", "UNDEFINED", "UNDEFINED"]
+
+
 class TestParserConstruction:
     def test_token_list_argument_is_not_mutated(self):
         token_list = [("START", "START"), ("END", "END"), ("NULL", "NULL"), ("E", "E"), (" *\\+ *", "+"), ("x", "x")]
