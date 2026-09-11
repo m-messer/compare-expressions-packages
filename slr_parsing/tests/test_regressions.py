@@ -70,7 +70,6 @@ class TestParserConstruction:
         with pytest.raises(ValueError, match="mode"):
             parser.scan("1+2", mode="nonsense")
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: group/operate accept or misreport zero elements")
     @pytest.mark.parametrize("action", [group, operate])
     def test_actions_reject_zero_elements(self, action):
         with pytest.raises(ValueError):

@@ -83,7 +83,7 @@ def relabel(production, output, tag_handler):
 
 def group(number_of_elements, empty=False, delimiters=["", ""]):
     if number_of_elements < 1:
-        raise Exception("Groups must have at least one element.")
+        raise ValueError("Groups must have at least one element.")
 
     def wrap(production, output, tag_handler):
         if empty:
@@ -115,8 +115,9 @@ def group(number_of_elements, empty=False, delimiters=["", ""]):
 
 
 def operate(number_of_elements, empty=False):
-    if number_of_elements < 0:
-        raise Exception("Operations must have at least one argument.")
+    # Zero is rejected too: output[-0:] would take the entire output stack.
+    if number_of_elements < 1:
+        raise ValueError("Operations must have at least one argument.")
 
     def wrap(production, output, tag_handler):
         if empty:
