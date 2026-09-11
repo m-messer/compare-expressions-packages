@@ -12,6 +12,7 @@ The first release after the extraction refactor. The import path is now `compare
 - `SLR_Parser` no longer sorts the caller's `token_list` in place.
 - `scan()` raises `ValueError` for an unknown `mode` (it used to crash with `UnboundLocalError`), and matches the mode exactly rather than by substring.
 - `group(0)` and `operate(0)` raise `ValueError`. `operate(0)` was accepted and would have consumed the entire output stack.
+- Each production runs its own reduction action. Actions used to be looked up by production *body*, so two productions with the same body but different heads (such as `A -> x` and `B -> x`) both ran whichever action was defined last. None of the grammars in these packages had such a pair.
 - `new_root_on_error` works: parsing resumes at the offending token and the extra roots are appended to the output. Before, the offending token was dropped and `parse()` crashed on the remaining tokens.
 
 ### Removed

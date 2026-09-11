@@ -474,8 +474,9 @@ class SLR_Parser:
         self.terminals_token = terminals_token
         self.non_terminals_token = non_terminals_token
 
-        # Create reductions dictionary
-        self.reductions = {tuple(productions_token[k][1]): productions[k][2] for k in range(0, len(productions))}
+        # Reduction actions, indexed like the productions (not by body: productions
+        # with equal bodies but different heads must keep their own actions)
+        self.reductions = [production[2] for production in productions]
 
         # Compute dictionary with FIRST for all single tokens
         first_dict = {**{x: [x] for x in terminals_token}, **{x: [] for x in non_terminals_token}}
@@ -812,7 +813,7 @@ class SLR_Parser:
                 break
             elif parse_action <= len(self.states)+len(self.productions_token):
                 production = productions_token[parse_action-len(self.states)]
-                reduction = self.reductions[tuple(production[1])]
+                reduction = self.reductions[parse_action-len(self.states)]
                 output = reduction(production, output, self.tag_handler)
                 # print("-----------------------")
                 # print(output[0].tree_string())

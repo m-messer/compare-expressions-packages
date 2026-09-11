@@ -70,6 +70,35 @@ class TestParserConstruction:
         with pytest.raises(ValueError, match="mode"):
             parser.scan("1+2", mode="nonsense")
 
+    def test_productions_with_the_same_body_keep_their_own_actions(self):
+        # S -> A y | B z ; A -> x ; B -> x. Both "x" reductions share a body, and
+        # each must run its own action (reductions used to be keyed by body).
+        calls = []
+
+        def record(name):
+            def action(production, output, tag_handler):
+                calls.append(name)
+                return output
+
+            return action
+
+        symbols = ["START", "END", "NULL", "S", "A", "B", "x", "y", "z"]
+        parser = SLR_Parser(
+            [(s, s) for s in symbols],
+            [
+                ("START", "S", record("START")),
+                ("S", "Ay", record("S->Ay")),
+                ("S", "Bz", record("S->Bz")),
+                ("A", "x", record("A->x")),
+                ("B", "x", record("B->x")),
+            ],
+            "START",
+            "END",
+            "NULL",
+        )
+        parser.parse(parser.scan("xy"))
+        assert calls == ["A->x", "S->Ay"]
+
     @pytest.mark.parametrize("action", [group, operate])
     def test_actions_reject_zero_elements(self, action):
         with pytest.raises(ValueError):
