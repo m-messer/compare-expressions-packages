@@ -1,44 +1,42 @@
 """Generic SLR(1) parser engine.
 
-Extracted verbatim from compareExpressions (app/utility/slr_parsing_utilities.py).
+Extracted from compareExpressions (app/utility/slr_parsing_utilities.py).
 Self-contained: depends only on the standard library.
 """
 
-from .parser import (
-    # Scanner / parser building blocks
-    catch_undefined,
-    proceed,
+from .actions import (
     append,
     append_last,
-    join,
+    compose,
     create_node,
-    relabel,
+    flatten,
     group,
-    operate,
     infix,
     insert_infix,
-    compose,
-    flatten,
-    # Tag management
-    tag_rule_union,
-    tag_rule_intersection,
-    tag_transfer,
-    tag_removal,
+    join,
+    operate,
+    proceed,
+    relabel,
+)
+from .builder import SLR_expression_parser
+from .errors import new_root_on_error
+from .grammar import catch_undefined
+from .parser import SLR_Parser
+from .tags import (
     tag,
+    tag_removal,
     tag_replace,
-    # Node traversal
-    traverse_prefix,
-    traverse_postfix,
-    traverse_infix,
-    traverse_group,
-    # Error handling
-    new_root_on_error,
-    # Parser generator
-    SLR_expression_parser,
-    # Classes
-    Token,
+    tag_rule_intersection,
+    tag_rule_union,
+    tag_transfer,
+)
+from .tokens import (
     ExprNode,
-    SLR_Parser,
+    Token,
+    traverse_group,
+    traverse_infix,
+    traverse_postfix,
+    traverse_prefix,
 )
 
 __all__ = [
