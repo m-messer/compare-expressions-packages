@@ -1,11 +1,13 @@
 import os
+
 import pytest
 
 from compareexpressions.units import preview_function
-from .test_slr_quantity import slr_strict_si_syntax_test_cases, slr_natural_si_syntax_test_cases
+
+from .test_slr_quantity import slr_natural_si_syntax_test_cases, slr_strict_si_syntax_test_cases
 
 
-class TestPreviewFunction():
+class TestPreviewFunction:
     """
     TestCase Class used to test the algorithm.
     ---
@@ -24,14 +26,16 @@ class TestPreviewFunction():
     as it should.
     """
 
-    @pytest.mark.parametrize("response,value,unit,content,value_latex,unit_latex,criteria", slr_strict_si_syntax_test_cases)
+    @pytest.mark.parametrize(
+        "response,value,unit,content,value_latex,unit_latex,criteria", slr_strict_si_syntax_test_cases
+    )
     def test_strict_syntax_cases(self, response, value, unit, content, value_latex, unit_latex, criteria):
         params = {
             "strict_syntax": False,
             "physical_quantity": True,
             "units_string": "SI",
             "strictness": "strict",
-            "elementary_functions": True
+            "elementary_functions": True,
         }
         result = preview_function(response, params)["preview"]
         latex = ""
@@ -40,17 +44,19 @@ class TestPreviewFunction():
         elif value_latex is not None and unit_latex is None:
             latex = value_latex
         elif value_latex is not None and unit_latex is not None:
-            latex = value_latex+"~"+unit_latex
+            latex = value_latex + "~" + unit_latex
         assert result["latex"] == latex
 
-    @pytest.mark.parametrize("response,value,unit,content,value_latex,unit_latex,criteria", slr_natural_si_syntax_test_cases)
+    @pytest.mark.parametrize(
+        "response,value,unit,content,value_latex,unit_latex,criteria", slr_natural_si_syntax_test_cases
+    )
     def test_natural_syntax_cases(self, response, value, unit, content, value_latex, unit_latex, criteria):
         params = {
             "strict_syntax": False,
             "physical_quantity": True,
             "units_string": "SI",
             "strictness": "natural",
-            "elementary_functions": True
+            "elementary_functions": True,
         }
         result = preview_function(response, params)["preview"]
         latex = ""
@@ -59,7 +65,7 @@ class TestPreviewFunction():
         elif value_latex is not None and unit_latex is None:
             latex = value_latex
         elif value_latex is not None and unit_latex is not None:
-            latex = value_latex+"~"+unit_latex
+            latex = value_latex + "~" + unit_latex
         assert result["latex"] == latex
 
     @pytest.mark.parametrize(
@@ -67,7 +73,7 @@ class TestPreviewFunction():
         [
             ("sin(123)", r"\sin{\left(123 \right)}", "sin(123)"),
             ("sqrt(162)", r"\sqrt{162}", "sqrt(162)"),
-        ]
+        ],
     )
     def test_issue_with_function_name_that_can_be_compound_unit(self, response, preview_latex, preview_sympy):
         params = {
@@ -86,15 +92,18 @@ class TestPreviewFunction():
         }
         response = "162 \\mathrm{~N} / \\mathrm{m}^{2}"
         result = preview_function(response, params)["preview"]
-        assert result["latex"] == r'162~\frac{\mathrm{newton}}{\mathrm{metre}^{(2)}}'  # TODO: Fix so that unnecessary parenthesis are simplified away
+        assert (
+            result["latex"] == r"162~\frac{\mathrm{newton}}{\mathrm{metre}^{(2)}}"
+        )  # TODO: Fix so that unnecessary parenthesis are simplified away
         assert result["sympy"] == "162 newton/metre**(2)"
 
     @pytest.mark.parametrize(
-        "response, latex, sympy", [
+        "response, latex, sympy",
+        [
             (r"\frac{F}{p \cdot \mu}", r"\frac{F}{\mu p}", "F/((mu*p))"),
             (r"F \cdot p", "F p", "F*p"),
             (r"\frac{10}{2} \mathrm{~kg}", r"\frac{10}{2}~\mathrm{kilogram}", "10/2 kilogram"),
-        ]
+        ],
     )
     def test_latex_physical_quantity_preview(self, response, latex, sympy):
         params = {
@@ -108,4 +117,4 @@ class TestPreviewFunction():
 
 
 if __name__ == "__main__":
-    pytest.main(['-xk not slow', "--tb=line", os.path.abspath(__file__)])
+    pytest.main(["-xk not slow", "--tb=line", os.path.abspath(__file__)])

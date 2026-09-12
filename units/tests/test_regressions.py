@@ -4,14 +4,13 @@ from copy import deepcopy
 
 import pytest
 
-from compareexpressions.units import SLR_quantity_parser, SLR_quantity_parsing, preview_function
-from compareexpressions.units.physical_quantity_preview import fix_exponents
+from compareexpressions.units import QuantityParseError, fix_exponents, parse_quantity, preview_function
 
 NATURAL = {"strictness": "natural", "units_string": "SI common imperial"}
 
 
 def parse(expr, params=NATURAL):
-    return SLR_quantity_parsing(expr, params, SLR_quantity_parser(params), "response")
+    return parse_quantity(expr, params)
 
 
 class TestUnitData:
@@ -28,6 +27,11 @@ class TestParsing:
         quantity = parse(expr)
         assert quantity.value is None
         assert quantity.unit.content_string() == quantity.ast_root.content_string()
+
+    def test_unit_between_value_parts_raises_instead_of_recursing_forever(self):
+        # v0.1 rotated left and right alternately until RecursionError.
+        with pytest.raises(QuantityParseError, match="Cannot separate the value from the unit"):
+            parse("5 m/s x")
 
 
 class TestPreview:

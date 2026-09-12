@@ -45,7 +45,7 @@ from compareexpressions.expression_parsing import (  # noqa: E402
     sympy_to_latex,
 )
 from compareexpressions.expression_parsing import preview_function as symbolic_preview  # noqa: E402
-from compareexpressions.units import SLR_quantity_parser, SLR_quantity_parsing  # noqa: E402
+from compareexpressions.units import parse_quantity  # noqa: E402
 from compareexpressions.units import preview_function as quantity_preview  # noqa: E402
 
 ERROR = "ERROR"
@@ -95,7 +95,7 @@ def quantity_params(variant: str) -> dict[str, Any]:
 
 def quantity_parse(expr: str, variant: str) -> dict[str, Any]:
     params = quantity_params(variant)
-    q = SLR_quantity_parsing(expr, params, SLR_quantity_parser(params), "response")
+    q = parse_quantity(expr, params, "response")
 
     def s(x: Any) -> str | None:
         return None if x is None else str(x)
@@ -104,14 +104,14 @@ def quantity_parse(expr: str, variant: str) -> dict[str, Any]:
         "value": None if q.value is None else q.value.original_string(),
         "unit": None if q.unit is None else q.unit.original_string(),
         "content": q.ast_root.content_string(),
-        "value_latex": q.value_latex_string,
-        "unit_latex": q.unit_latex_string,
-        "latex": q.latex_string,
+        "value_latex": q.value_latex,
+        "unit_latex": q.unit_latex,
+        "latex": q.latex,
         "standard_value": s(q.standard_value),
         "standard_unit": s(q.standard_unit),
         "expanded_unit": s(q.expanded_unit),
         "dimension": s(q.dimension),
-        "unit_factor": s(q.converted_unit_factor),
+        "unit_factor": s(q.unit_factor),
         "messages": [[tag, fb.tag, dict(fb.inputs)] for tag, fb in q.messages],
     }
 

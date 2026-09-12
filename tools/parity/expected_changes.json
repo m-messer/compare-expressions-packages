@@ -504,6 +504,60 @@
    "value_latex": "2"
   }
  },
+ "quantity.parse|legacy|3 µs": {
+  "reason": "units: legacy strictness re-tagged the tree with a tag handler for strictness 'legacy' (matching neither branch) while splitting value and unit; it now uses the parser's own (natural) rules",
+  "value": {
+   "content": "3 µs",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "3 \\cdot \\mu \\cdot s",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "",
+      "before": "3 µ",
+      "marked": "s"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "3*mu*s",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "3 µs",
+   "value_latex": "3 \\cdot \\mu \\cdot s"
+  }
+ },
+ "quantity.parse|legacy|3 μs": {
+  "reason": "units: legacy strictness re-tagged the tree with a tag handler for strictness 'legacy' (matching neither branch) while splitting value and unit; it now uses the parser's own (natural) rules",
+  "value": {
+   "content": "3 μs",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "3 \\cdot \\mu \\cdot s",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "",
+      "before": "3 μ",
+      "marked": "s"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "3*mu*s",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "3 μs",
+   "value_latex": "3 \\cdot \\mu \\cdot s"
+  }
+ },
  "quantity.parse|natural_si|(2 kg) (m/s)": {
   "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
   "value": {
@@ -1150,6 +1204,20 @@
   "value": {
    "latex": "2~\\mathrm{litre}",
    "sympy": "2 litres"
+  }
+ },
+ "quantity.preview|legacy|3 µs": {
+  "reason": "units: legacy strictness re-tagged the tree with a tag handler for strictness 'legacy' (matching neither branch) while splitting value and unit; it now uses the parser's own (natural) rules",
+  "value": {
+   "latex": "3 \\cdot \\mu \\cdot s",
+   "sympy": "3 µs"
+  }
+ },
+ "quantity.preview|legacy|3 μs": {
+  "reason": "units: legacy strictness re-tagged the tree with a tag handler for strictness 'legacy' (matching neither branch) while splitting value and unit; it now uses the parser's own (natural) rules",
+  "value": {
+   "latex": "3 \\cdot \\mu \\cdot s",
+   "sympy": "3 μs"
   }
  },
  "quantity.preview|natural_si|(2 kg) (m/s)": {

@@ -32,7 +32,6 @@ line-length = 120
 # (see docs/refactor/). tools/parity/capture_v0_1.py targets the frozen
 # v0.1 API and is kept verbatim.
 extend-exclude = [
-    "units",
     "tools/parity/capture_v0_1.py",
 ]
 
@@ -56,7 +55,7 @@ known-first-party = ["compareexpressions"]
 [tool.mypy]
 python_version = "3.11"
 # Packages are added here as their refactor phase lands (see docs/refactor/).
-files = ["tools/parity/corpus.py", "tools/parity/check.py", "slr_parsing/src", "criteria/src", "expression_parsing/src"]
+files = ["tools/parity/corpus.py", "tools/parity/check.py", "slr_parsing/src", "criteria/src", "expression_parsing/src", "units/src"]
 namespace_packages = true
 explicit_package_bases = true
 mypy_path = [
@@ -70,13 +69,6 @@ warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 
-# Not yet refactored: analysed for types but their own errors are not reported.
-# Each package leaves this list in its refactor phase.
-[[tool.mypy.overrides]]
-module = [
-    "compareexpressions.units.*",
-]
-follow_imports = "silent"
 
 # Strict checking, spelled out: `strict` itself is global-only.
 [[tool.mypy.overrides]]
@@ -101,7 +93,12 @@ extra_checks = true
 # SymPy's own annotations are too loose for the strict flags; require typed
 # definitions and check their bodies.
 [[tool.mypy.overrides]]
-module = ["compareexpressions.expression_parsing", "compareexpressions.expression_parsing.*"]
+module = [
+    "compareexpressions.expression_parsing",
+    "compareexpressions.expression_parsing.*",
+    "compareexpressions.units",
+    "compareexpressions.units.*",
+]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true

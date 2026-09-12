@@ -25,7 +25,7 @@ from .actions import (
 )
 from .builder import build_expression_parser
 from .errors import GrammarError, ParseError, ScanError, SLRError, new_root_on_error
-from .grammar import Action, ErrorHandler, Matcher, Production, TagHandler, TokenSpec, catch_undefined
+from .grammar import Action, ErrorHandler, Matcher, Production, TagHandler, TokenProduction, TokenSpec, catch_undefined
 from .parser import SLRParser
 from .tags import add_tag, inherit_tags, intersection_rule, remove_tag, replace_tag, union_rule
 from .tokens import ExprNode, Token, traverse_group, traverse_infix, traverse_postfix, traverse_prefix
@@ -43,6 +43,7 @@ __all__ = [
     "ScanError",
     "TagHandler",
     "Token",
+    "TokenProduction",
     "TokenSpec",
     "add_tag",
     "append",

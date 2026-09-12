@@ -1,47 +1,67 @@
-"""Unit system data, physical-quantity parsing and dimensional analysis.
+"""Physical quantities: unit data, parsing into value and unit, dimensional analysis, preview.
 
-Extracted from compareExpressions and decoupled from app-specific feedback
-strings (reverted-unit messages now carry a
-``expression_parsing.FeedbackTag``). Modules:
-- unit_system_conversions.py    <- app/utility/unit_system_conversions.py (pure data)
-- physical_quantity_utilities.py <- app/utility/physical_quantity_utilities.py
-- physical_quantity_preview.py   <- app/preview_implementations/physical_quantity_preview.py
+Typical use::
 
-Depends on the ``slr_parsing`` and ``expression_parsing`` packages, plus sympy.
+    params = QuantityParams.from_dict(evaluation_params)
+    quantity = parse_quantity("9.81 m/s^2", params)
+    quantity.value, quantity.unit, quantity.dimension, quantity.standard_value
+
+or ``preview_function(response, evaluation_params)`` for a preview.
+
+Extracted from compareExpressions; unit-like text read as part of a value is
+reported as ``REVERTED_UNIT`` :class:`~compareexpressions.expression_parsing.FeedbackTag` messages.
 """
 
-from .unit_system_conversions import (
-    set_of_SI_prefixes,
-    set_of_SI_base_unit_dimensions,
-    set_of_derived_SI_units_in_SI_base_units,
-    set_of_very_common_units_in_SI,
-    set_of_common_units_in_SI,
-    set_of_imperial_units,
-    conversion_to_base_si_units,
+from .data import (
+    ALL_UNITS,
+    COMMON_UNITS,
+    CONVERSION_TO_BASE_SI,
+    IMPERIAL_UNITS,
+    SI_BASE_UNITS,
+    SI_DERIVED_UNITS,
+    SI_PREFIXES,
+    UNIT_SETS,
+    VERY_COMMON_UNITS,
+    BaseUnit,
+    Prefix,
+    Unit,
+    units_in,
 )
-from .physical_quantity_utilities import (
-    QuantityTags,
-    PhysicalQuantity,
-    units_sets_dictionary,
-    SLR_quantity_parser,
-    SLR_quantity_parsing,
-    expression_preprocess,
-)
-from .physical_quantity_preview import preview_function
+from .errors import QuantityError, QuantityParseError, UnitConversionError
+from .params import QuantityParams, Strictness
+from .parser import build_quantity_parser
+from .preprocessing import preprocess_legacy, preprocess_quantity, transform_prefixes_to_standard
+from .preview import fix_exponents, preview_function
+from .quantity import REVERTED_UNIT, PhysicalQuantity, parse_quantity
+from .tags import QuantityTag
 
 __all__ = [
-    "set_of_SI_prefixes",
-    "set_of_SI_base_unit_dimensions",
-    "set_of_derived_SI_units_in_SI_base_units",
-    "set_of_very_common_units_in_SI",
-    "set_of_common_units_in_SI",
-    "set_of_imperial_units",
-    "conversion_to_base_si_units",
-    "QuantityTags",
+    "ALL_UNITS",
+    "COMMON_UNITS",
+    "CONVERSION_TO_BASE_SI",
+    "IMPERIAL_UNITS",
+    "REVERTED_UNIT",
+    "SI_BASE_UNITS",
+    "SI_DERIVED_UNITS",
+    "SI_PREFIXES",
+    "UNIT_SETS",
+    "VERY_COMMON_UNITS",
+    "BaseUnit",
     "PhysicalQuantity",
-    "units_sets_dictionary",
-    "SLR_quantity_parser",
-    "SLR_quantity_parsing",
-    "expression_preprocess",
+    "Prefix",
+    "QuantityError",
+    "QuantityParams",
+    "QuantityParseError",
+    "QuantityTag",
+    "Strictness",
+    "Unit",
+    "UnitConversionError",
+    "build_quantity_parser",
+    "fix_exponents",
+    "parse_quantity",
+    "preprocess_legacy",
+    "preprocess_quantity",
     "preview_function",
+    "transform_prefixes_to_standard",
+    "units_in",
 ]

@@ -10,7 +10,7 @@ from __future__ import annotations
 import ast
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, fields, replace
-from typing import Any, Literal, get_args
+from typing import Any, Literal, Self, get_args
 
 from .errors import ExpressionParsingError, SymbolAssumptionError
 from .preprocessing import find_matching_parenthesis
@@ -132,7 +132,7 @@ class ExpressionParams:
         object.__setattr__(self, "symbol_assumptions", tuple(tuple(pair) for pair in self.symbol_assumptions))
 
     @classmethod
-    def from_dict(cls, params: Mapping[str, Any]) -> ExpressionParams:
+    def from_dict(cls, params: Mapping[str, Any]) -> Self:
         """Build from evaluation-function parameters (JSON keys); unrelated keys are ignored."""
         names = {f.name for f in fields(cls)}
         values = {_ALIASES.get(key, key): value for key, value in params.items()}
@@ -141,7 +141,7 @@ class ExpressionParams:
             values["symbol_assumptions"] = parse_symbol_assumptions(values["symbol_assumptions"])
         return cls(**values)
 
-    def replace(self, **changes: Any) -> ExpressionParams:
+    def replace(self, **changes: Any) -> Self:
         """A copy with some fields changed."""
         return replace(self, **changes)
 
