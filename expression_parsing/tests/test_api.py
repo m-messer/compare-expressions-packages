@@ -1,0 +1,168 @@
+"""Tests for the typed API introduced in 0.2.0: parameters, configuration, conventions, LaTeX, preview."""
+
+import pytest
+from sympy import E, I, Symbol
+
+from compareexpressions.expression_parsing import (
+    PATTERNS,
+    ExpressionParams,
+    ExpressionParsingError,
+    ExpressionSyntaxError,
+    FeedbackTag,
+    FeedbackTagName,
+    LatexParseError,
+    SymbolAssumptionError,
+    SymbolSpec,
+    SympyParsingConfig,
+    apply_convention,
+    convention_parser,
+    parse_expression,
+    parse_latex,
+    parse_symbol_assumptions,
+    parse_symbolic,
+    preview_function,
+    sanitise_latex,
+)
+
+
+class TestExpressionParams:
+    def test_defaults_match_the_evaluation_function_defaults(self):
+        params = ExpressionParams()
+        assert (params.complex_numbers, params.convention, params.elementary_functions, params.strict_syntax) == (
+            False,
+            "equal_precedence",
+            False,
+            False,
+        )
+        assert params.rationalise is True
+
+    def test_from_dict_maps_json_names_and_ignores_unrelated_keys(self):
+        params = ExpressionParams.from_dict(
+            {"complexNumbers": True, "specialFunctions": True, "strict_syntax": True, "atol": 0.1, "criteria": "x"}
+        )
+        assert (params.complex_numbers, params.special_functions, params.strict_syntax) == (True, True, True)
+
+    def test_symbols_are_normalised_once(self):
+        params = ExpressionParams.from_dict(
+            {
+                "symbols": {
+                    "x": {"latex": "x", "aliases": [" xx ", "", "  "]},
+                    " ": {"latex": "blank", "aliases": ["b"]},
+                    "lambda": {"latex": r"\Lambda", "aliases": ["lam"]},
+                }
+            }
+        )
+        assert params.symbols == {
+            "x": SymbolSpec("x", ("xx",)),
+            "lamda": SymbolSpec(r"\Lambda", ("lam", "lambda")),
+        }
+
+    def test_lamda_always_exists(self):
+        assert ExpressionParams().symbols == {"lamda": SymbolSpec(r"\lambda", ("lambda",))}
+
+    def test_normalisation_is_idempotent(self):
+        params = ExpressionParams.from_dict({"symbols": {"lambda": {"latex": "L", "aliases": ["lam"]}}})
+        assert params.replace(simplify=True).symbols == params.symbols
+
+    def test_legacy_input_symbols(self):
+        params = ExpressionParams.from_dict({"input_symbols": [["x", ["xx", " "]], [" ", ["y"]], []]})
+        assert params.input_symbols == (("x", ("xx",)),)
+
+    def test_symbol_assumptions_string_is_parsed(self):
+        params = ExpressionParams.from_dict({"symbol_assumptions": "('a','positive') ('f','function')"})
+        assert params.symbol_assumptions == (("a", "positive"), ("f", "function"))
+
+    @pytest.mark.parametrize("text", ["('a')", "('a', 'b', 'c')", "(1, 2)", "('a', 'positive'"])
+    def test_malformed_symbol_assumptions(self, text):
+        with pytest.raises(SymbolAssumptionError):
+            parse_symbol_assumptions(text)
+
+    def test_unknown_convention(self):
+        with pytest.raises(ExpressionParsingError, match="Unknown convention"):
+            ExpressionParams(convention="sideways")
+
+    def test_params_are_immutable(self):
+        with pytest.raises(AttributeError):
+            ExpressionParams().strict_syntax = True
+
+
+class TestSympyParsingConfig:
+    def test_multi_character_symbols_and_reserved_keywords_are_unsplittable(self):
+        params = ExpressionParams.from_dict({"symbols": {"bc": {"latex": "b_c"}}, "reserved_keywords": ["resp"]})
+        config = SympyParsingConfig.from_params(params, unsplittable_symbols=["metre"])
+        assert config.unsplittable_symbols == ("metre", "resp", "bc", "lamda")
+        assert str(parse_expression("a/bc", config)) == "a/bc"
+
+    def test_special_names_are_plain_symbols_unless_enabled(self):
+        plain = SympyParsingConfig.from_params(ExpressionParams())
+        enabled = SympyParsingConfig.from_params(ExpressionParams(complex_numbers=True, elementary_functions=True))
+        assert plain.symbol_dict["I"] == Symbol("I") and enabled.symbol_dict["I"] == I
+        assert plain.symbol_dict["E"] == Symbol("E") and enabled.symbol_dict["E"] == E
+
+    def test_replace_gives_a_new_config(self):
+        config = SympyParsingConfig.from_params(ExpressionParams())
+        assert config.replace(strict_syntax=True).strict_syntax is True
+        assert config.strict_syntax is False
+
+    def test_plus_minus_parses_to_a_set(self):
+        config = SympyParsingConfig.from_params(ExpressionParams())
+        x = Symbol("x")
+        # Parsed unevaluated (x - 1 stays x - 1*1), so compare evaluated forms.
+        assert {e.doit() for e in parse_expression("x plus_minus 1", config)} == {x + 1, x - 1}
+
+
+class TestConventions:
+    def test_parser_is_built_once_per_convention(self):
+        assert convention_parser("equal_precedence") is convention_parser("equal_precedence")
+        assert convention_parser("equal_precedence") is not convention_parser("implicit_higher_precedence")
+
+    @pytest.mark.parametrize(
+        ("convention", "expected"),
+        [("equal_precedence", "a/bc"), ("implicit_higher_precedence", "a/(bc)"), (None, "a/bc")],
+    )
+    def test_apply_convention(self, convention, expected):
+        assert apply_convention("a/bc", convention) == expected
+
+
+class TestLatex:
+    def test_parse_latex_maps_task_symbols(self):
+        symbols = {"x_1": SymbolSpec("x_{1}")}
+        assert parse_latex(r"x_{1}^2", symbols) == "x_1**2"
+
+    def test_parse_latex_plus_minus(self):
+        assert parse_latex(r"1 \pm x", {}) == "{1 - x, x + 1}"
+
+    def test_unparseable_symbol_latex(self):
+        with pytest.raises(LatexParseError, match="symbol"):
+            parse_latex("x", {"x": SymbolSpec(r"\frac{")})
+
+    def test_sanitise_latex_unwraps_text(self):
+        assert sanitise_latex(r"3 \mathrm{kg}~\text{m}") == "3kg m"
+
+
+class TestPreview:
+    def test_preview_accepts_typed_params(self):
+        params = ExpressionParams(elementary_functions=True)
+        assert preview_function("sin(x)", params)["preview"]["latex"] == r"\sin{\left(x \right)}"
+
+    def test_preview_result_fits_lf_toolkit_types(self):
+        preview_module = pytest.importorskip("lf_toolkit.preview")
+        result = preview_function("x+1", {})
+        assert set(result) == set(preview_module.Result.__annotations__)
+        assert set(result["preview"]) <= set(preview_module.Preview.__annotations__)
+
+    def test_parse_symbolic_reports_parse_errors_as_feedback(self):
+        with pytest.raises(ExpressionSyntaxError) as info:
+            parse_symbolic("x***2", ExpressionParams())
+        assert info.value.feedback == FeedbackTag(FeedbackTagName.PARSE_ERROR, {"response": "x***2"})
+        assert isinstance(info.value, ExpressionParsingError)
+
+    def test_feedback_tag_names_are_strings(self):
+        assert FeedbackTagName.PARSE_ERROR == "PARSE_ERROR"
+
+
+def test_written_as_patterns():
+    assert PATTERNS["NUMBER"].matcher("3.5")
+    assert PATTERNS["CARTESIAN"].matcher("1+2*I")
+    assert PATTERNS["EXPONENTIAL"].matcher("2*exp(3*I)")
+    assert not PATTERNS["NUMBER"].matcher("x")

@@ -23,10 +23,7 @@ class _LatexPrinter(LatexPrinter):
     """SymPy's LaTeX printer, but printing logarithms with a base as ``\\log_{b}``."""
 
     def _print_log(self, expr: Any, exp: Any = None) -> str:
-        if self._settings["ln_notation"] and len(expr.args) < 2:
-            log_not = r"\ln"
-        else:
-            log_not = r"\log"
+        log_not = r"\ln" if self._settings["ln_notation"] and len(expr.args) < 2 else r"\log"
         if len(expr.args) > 1:
             base = self._print(expr.args[1])
             log_not = rf"\log_{{{base}}}"
@@ -45,7 +42,9 @@ def latex_symbols(symbols: Mapping[str, SymbolSpec]) -> dict[Symbol, str]:
     return {Symbol(code): extract_latex(spec.latex) for code, spec in symbols.items() if spec.latex is not None}
 
 
-def sympy_to_latex(expression: Any, symbols: Mapping[str, SymbolSpec], settings: Mapping[str, Any] | None = None) -> str:
+def sympy_to_latex(
+    expression: Any, symbols: Mapping[str, SymbolSpec], settings: Mapping[str, Any] | None = None
+) -> str:
     """LaTeX for a SymPy expression, printing task symbols with their LaTeX.
 
     ``settings`` are ``sympy.latex`` settings; ``ln_notation`` defaults to True.

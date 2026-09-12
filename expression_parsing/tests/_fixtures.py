@@ -27,7 +27,12 @@ elementary_function_test_cases = [
     ("asinh", "Basinh(sinh(1))", "B", r"B \cdot \operatorname{asinh}{\left(\sinh{\left(1 \right)} \right)}"),
     ("acosh", "Bacosh(cosh(1))", "B", r"B \cdot \operatorname{acosh}{\left(\cosh{\left(1 \right)} \right)}"),
     ("atanh", "Batanh(tanh(1))", "B", r"B \cdot \operatorname{atanh}{\left(\tanh{\left(1 \right)} \right)}"),
-    ("asech", "Bsech(asech(1))", "B", r"B \cdot \operatorname{sech}{\left(\operatorname{asech}{\left(1 \right)} \right)}"),
+    (
+        "asech",
+        "Bsech(asech(1))",
+        "B",
+        r"B \cdot \operatorname{sech}{\left(\operatorname{asech}{\left(1 \right)} \right)}",
+    ),
     ("exp", "Bexp(x)exp(x)", "B*exp(2*x)", r"B \cdot e^{x} \cdot e^{x}"),
     ("exp2", "a+b*E^2", "a+b*exp(2)", r"a + b \cdot e^{2}"),
     ("exp3", "a+b*e^2", "a+b*exp(2)", r"a + b \cdot e^{2}"),
@@ -42,5 +47,10 @@ elementary_function_test_cases = [
     ("arg", "Barg(1)", "0", r"B \cdot \arg{\left(1 \right)}"),
     ("ceiling", "Bceiling(0.6)", "B", r"B \cdot 1"),  # r"B \left\lceil 0.6 \right\rceil"),
     ("floor", "Bfloor(0.6)", "0", r"B \cdot 0"),  # r"B \left\lfloor 0.6 \right\rfloor"),
-    ("MECH50001_7.2", "fs/(1-Mcos(theta))", "fs/(1-M*cos(theta))", r"\frac{f \cdot s}{1 - M \cdot \cos{\left(\theta \right)}}"),
+    (
+        "MECH50001_7.2",
+        "fs/(1-Mcos(theta))",
+        "fs/(1-M*cos(theta))",
+        r"\frac{f \cdot s}{1 - M \cdot \cos{\left(\theta \right)}}",
+    ),
 ]

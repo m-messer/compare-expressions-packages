@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Any, NotRequired, TypedDict
 
 from sympy import Basic
-from sympy.parsing.sympy_parser import T as parser_transformations
+from sympy.parsing.sympy_parser import T as TRANSFORMATIONS
 
 from .errors import ExpressionParsingError, ExpressionSyntaxError
 from .feedback import FeedbackTag, FeedbackTagName
@@ -49,7 +49,7 @@ def parse_symbolic(response: str, params: ExpressionParams) -> tuple[list[Basic 
 
     config = SympyParsingConfig.from_params(params)
     config = config.replace(
-        extra_transformations=parser_transformations[9],  # convert equals signs
+        extra_transformations=TRANSFORMATIONS[9],  # convert equals signs
         symbol_dict={**config.symbol_dict, **sympy_symbols(params.symbols)},
     )
     parsed = []

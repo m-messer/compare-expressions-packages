@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from functools import cached_property
 from typing import Any
 
 from sympy import Basic, Equality, Function, Symbol
-from sympy.parsing.sympy_parser import T as parser_transformations
+from sympy.parsing.sympy_parser import T as TRANSFORMATIONS
 from sympy.parsing.sympy_parser import _token_splittable, parse_expr, split_symbols_custom
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -27,7 +27,7 @@ def sympy_symbols(symbols: Iterable[str]) -> dict[str, Symbol]:
 
 def _base_symbol_dict(params: ExpressionParams) -> dict[str, Any]:
     """Names SymPy would otherwise read as special objects, unless enabled by the parameters."""
-    from sympy import E, I, Chi, Lambda, beta, gamma, zeta
+    from sympy import Chi, E, I, Lambda, beta, gamma, zeta
 
     special: dict[str, Any] = {"beta": beta, "gamma": gamma, "zeta": zeta, "Lambda": Lambda, "Chi": Chi}
     if not params.special_functions:
@@ -124,7 +124,7 @@ class SympyParsingConfig:
 
     def transformations(self) -> tuple[Any, ...]:
         if self.strict_syntax:
-            transformations = parser_transformations[0:4, 10] + self.extra_transformations
+            transformations = TRANSFORMATIONS[0:4, 10] + self.extra_transformations
         else:
             unsplittable = set(self.unsplittable_symbols)
 
@@ -132,13 +132,13 @@ class SympyParsingConfig:
                 return name not in unsplittable and _token_splittable(name)
 
             transformations = (
-                parser_transformations[0:5, 6, 10]
+                TRANSFORMATIONS[0:5, 6, 10]
                 + self.extra_transformations
                 + (split_symbols_custom(can_split),)
-                + parser_transformations[8, 9]
+                + TRANSFORMATIONS[8, 9]
             )
         if self.rationalise:
-            transformations += parser_transformations[11]
+            transformations += TRANSFORMATIONS[11]
         return tuple(transformations)
 
 
@@ -194,7 +194,7 @@ def _parse_one(expr: str, config: SympyParsingConfig, transformations: tuple[Any
     return parsed
 
 
-def parse_expression(expr_string: str | Collection[str], config: SympyParsingConfig) -> Basic | set[Basic]:
+def parse_expression(expr_string: str | Sequence[str], config: SympyParsingConfig) -> Basic | set[Basic]:
     """Parse a (preprocessed) response into a SymPy expression.
 
     A response standing for several expressions (``{a, b}`` or ``±``) gives a

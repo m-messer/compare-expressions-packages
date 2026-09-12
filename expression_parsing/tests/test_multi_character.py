@@ -1,5 +1,7 @@
 import pytest
+
 from compareexpressions.expression_parsing import ExpressionParams, SympyParsingConfig, parse_expression
+
 
 class TestMultiCharImplicitMultiHigherPrecedenceIntegration:
     """
@@ -29,25 +31,22 @@ class TestMultiCharImplicitMultiHigherPrecedenceIntegration:
             parsed_response = parse_expression(response, parsing_params)
             parsed_answer = parse_expression(answer, parsing_params)
         except Exception as e:
-            pytest.fail(f"Parsing failed for input '{response}' or '{answer}': {str(e)}")
+            pytest.fail(f"Parsing failed for input '{response}' or '{answer}': {e!s}")
 
-        assert parsed_response == parsed_answer, \
+        assert parsed_response == parsed_answer, (
             f"\nInput:    {response}\nExpected: {parsed_answer}\nGot:      {parsed_response}"
+        )
 
     def test_multi_character_implicit_multi_variable(self):
-        symbols = {
-            "a": {"aliases": ["a"]},
-            "bc": {"aliases": ["bc"]},
-            "d": {"aliases": ["d"]}
-        }
+        symbols = {"a": {"aliases": ["a"]}, "bc": {"aliases": ["bc"]}, "d": {"aliases": ["d"]}}
         answer = "a/(bc*d)"
-        
+
         # Case 1: Full explicit
         self.assert_expression_equality("a/(bc*d)", answer, symbols)
-        
+
         # Case 2: Implicit with brackets
         self.assert_expression_equality("a/(bcd)", answer, symbols)
-        
+
         # Case 3: Implicit no brackets
         self.assert_expression_equality("a/bcd", answer, symbols)
 
@@ -58,7 +57,7 @@ class TestMultiCharImplicitMultiHigherPrecedenceIntegration:
             "b": {"aliases": ["b"]},
             "c": {"aliases": ["c"]},
             "d": {"aliases": ["d"]},
-            "f": {"aliases": ["f"]}
+            "f": {"aliases": ["f"]},
         }
 
         answer = "a/(b*c)/(d*f)"
@@ -67,24 +66,14 @@ class TestMultiCharImplicitMultiHigherPrecedenceIntegration:
 
     def test_addition_with_division_and_implicit(self):
         """Test that addition doesn't interfere"""
-        symbols = {
-            "a": {"aliases": ["a"]},
-            "b": {"aliases": ["b"]},
-            "c": {"aliases": ["c"]},
-            "d": {"aliases": ["d"]}
-        }
+        symbols = {"a": {"aliases": ["a"]}, "b": {"aliases": ["b"]}, "c": {"aliases": ["c"]}, "d": {"aliases": ["d"]}}
         answer = "a/(b*c) + d"
         response = "a/bc + d"
         self.assert_expression_equality(response, answer, symbols)
 
     def test_multiplication_after_division(self):
         """Test explicit multiplication after division"""
-        symbols = {
-            "a": {"aliases": ["a"]},
-            "b": {"aliases": ["b"]},
-            "c": {"aliases": ["c"]},
-            "d": {"aliases": ["d"]}
-        }
+        symbols = {"a": {"aliases": ["a"]}, "b": {"aliases": ["b"]}, "c": {"aliases": ["c"]}, "d": {"aliases": ["d"]}}
 
         answer = "(a/(b*c))*d"
         response = "a/bc*d"

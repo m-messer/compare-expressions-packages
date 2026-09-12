@@ -4,7 +4,6 @@ from compareexpressions.expression_parsing import generate_arbitrary_number_patt
 
 
 class TestGenerateArbitraryNumberPatternMatcher:
-
     @pytest.mark.parametrize(
         "pattern_string, matching_strings, non_matching_strings",
         [
@@ -15,7 +14,7 @@ class TestGenerateArbitraryNumberPatternMatcher:
             # an invalid pattern and raise `re.error: unbalanced parenthesis`.
             ("(2x-5)(3x+2)", ["(2x-5)(3x+2)", "(7x-1)(4x+9)"], ["(3x+2)(2x-5)", "3x^2-11x-10"]),
             ("(x-4)^2-5", ["(x-4)^2-5", "(x-6)^2-1"], ["(x-4)^2+5", "x^2-8x+11"]),
-        ]
+        ],
     )
     def test_matcher(self, pattern_string, matching_strings, non_matching_strings):
         matcher = generate_arbitrary_number_pattern_matcher(pattern_string)

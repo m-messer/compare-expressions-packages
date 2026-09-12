@@ -1,5 +1,5 @@
 import pytest
-from sympy import Symbol, sqrt, sin as sympy_sin
+from sympy import Symbol, sqrt
 
 from compareexpressions.expression_parsing import (
     ExpressionParams,
@@ -28,7 +28,6 @@ from compareexpressions.expression_parsing.substitution import (
 
 
 class TestConvertUnicodeDashes:
-
     @pytest.mark.parametrize(
         "expr, expected",
         [
@@ -58,7 +57,7 @@ class TestConvertUnicodeDashes:
             ("x–y−z", [("–", "-"), ("−", "-")]),
             # Repeated occurrences of the same dash — still one substitution pair
             ("x−y−z", [("−", "-")]),
-        ]
+        ],
     )
     def test_convert_unicode_dashes(self, expr, expected):
         result = unicode_dash_substitutions(expr)
@@ -66,7 +65,6 @@ class TestConvertUnicodeDashes:
 
 
 class TestConvertAbsoluteNotation:
-
     @pytest.mark.parametrize(
         "expr, expected_expr, has_feedback",
         [
@@ -77,7 +75,7 @@ class TestConvertAbsoluteNotation:
             ("|x+y|", "Abs(x+y)", False),
             # Two non-adjacent absolute values
             ("|x|+|y|", "Abs(x)+Abs(y)", False),
-        ]
+        ],
     )
     def test_convert_absolute_notation(self, expr, expected_expr, has_feedback):
         result_expr, feedback = convert_absolute_notation(expr, "response")
@@ -86,13 +84,12 @@ class TestConvertAbsoluteNotation:
 
     def test_ambiguous_pipes_produce_feedback(self):
         # More than 2 pipes with ambiguous positions produces feedback
-        expr, feedback = convert_absolute_notation("|x|y|z|", "response")
+        _, feedback = convert_absolute_notation("|x|y|z|", "response")
         assert feedback is not None
         assert feedback.tag == "ABSOLUTE_VALUE_NOTATION_AMBIGUITY"
 
 
 class TestTransformUnicodeGreekSymbols:
-
     def test_no_greek_symbols_returns_empty(self):
         assert greek_symbol_substitutions("x + y") == []
 
@@ -116,7 +113,6 @@ class TestTransformUnicodeGreekSymbols:
 
 
 class TestProtectElementaryFunctionsSubstitutions:
-
     def test_no_functions_returns_empty(self):
         assert elementary_function_substitutions("x + y") == []
 
@@ -136,7 +132,6 @@ class TestProtectElementaryFunctionsSubstitutions:
 
 
 class TestSubstituteInputSymbols:
-
     def test_plain_expression_unchanged(self):
         result = substitute_input_symbols("x+y", ExpressionParams())
         assert result == ["x+y"]
@@ -161,7 +156,6 @@ class TestSubstituteInputSymbols:
 
 
 class TestFindMatchingParenthesis:
-
     @pytest.mark.parametrize(
         "string, index, delimiters, expected",
         [
@@ -179,7 +173,7 @@ class TestFindMatchingParenthesis:
             ("[x+y]", 0, ("[", "]"), 4),
             # Starts mid-string
             ("a(b+c)d", 1, None, 5),
-        ]
+        ],
     )
     def test_find_matching_parenthesis(self, string, index, delimiters, expected):
         if delimiters is None:
@@ -190,9 +184,9 @@ class TestFindMatchingParenthesis:
 
 
 class TestHasMatchingBrackets:
-
     @pytest.mark.parametrize(
-        "expr, expected", [
+        "expr, expected",
+        [
             ("x+y", True),
             ("(x+y)", True),
             ("[x+y]", True),
@@ -208,20 +202,20 @@ class TestHasMatchingBrackets:
             ("[x+y", False),
             ("x+y]", False),
             ("((x+y)", False),
-        ]
+        ],
     )
     def test_has_matching_brackets(self, expr, expected):
         assert has_matching_brackets(expr) is expected
 
 
 class TestConvertBracketNotation:
-
     @pytest.mark.parametrize(
-        "expr, expected", [
+        "expr, expected",
+        [
             ("[x+y]", "(x+y)"),
             ("[x+(y-1)]", "(x+(y-1))"),
             ("{x+1}*{x-2}", "(x+1)*(x-2)"),
-        ]
+        ],
     )
     def test_matched_brackets_are_converted(self, expr, expected):
         result, feedback = convert_bracket_notation(expr)
@@ -234,13 +228,14 @@ class TestConvertBracketNotation:
         assert feedback is None
 
     @pytest.mark.parametrize(
-        "expr", [
+        "expr",
+        [
             "[x+y)",
             "(x+y]",
             "{x+y)",
             "[x+y",
             "x+y]",
-        ]
+        ],
     )
     def test_mismatched_brackets_are_rejected(self, expr):
         result, feedback = convert_bracket_notation(expr)
@@ -250,7 +245,6 @@ class TestConvertBracketNotation:
 
 
 class TestSubstitute:
-
     @pytest.mark.parametrize(
         "string, substitutions, expected",
         [
@@ -270,7 +264,7 @@ class TestSubstitute:
             ("a b c", [("a", "x"), ("b", "y"), ("c", "z")], "x y z"),
             # List input is joined into a single result
             (["hello", " ", "world"], [("world", "earth")], "hello earth"),
-        ]
+        ],
     )
     def test_substitute(self, string, substitutions, expected):
         assert substitute(string, substitutions) == expected
@@ -286,7 +280,6 @@ class TestSubstitute:
 
 
 class TestComputeRelativeTolerance:
-
     @pytest.mark.parametrize(
         "string, expected",
         [
@@ -306,7 +299,7 @@ class TestComputeRelativeTolerance:
             ("1.23e5", 5e-3),
             # Negative: "-1.23" → lstrip removes "-" → "123" → len 3 → 5e-3
             ("-1.23", 5e-3),
-        ]
+        ],
     )
     def test_relative_tolerance(self, string, expected):
         result = compute_relative_tolerance_from_significant_decimals(string)
@@ -314,7 +307,6 @@ class TestComputeRelativeTolerance:
 
 
 class TestSympySymbols:
-
     def test_returns_symbol_objects(self):
         result = sympy_symbols({"x": {}, "y": {}})
         assert result == {"x": Symbol("x"), "y": Symbol("y")}
@@ -328,7 +320,6 @@ class TestSympySymbols:
 
 
 class TestExtractLatex:
-
     @pytest.mark.parametrize(
         "symbol, expected",
         [
@@ -340,14 +331,13 @@ class TestExtractLatex:
             # No delimiters — returned as-is
             ("x^2", "x^2"),
             ("plain", "plain"),
-        ]
+        ],
     )
     def test_extract_latex(self, symbol, expected):
         assert extract_latex(symbol) == expected
 
 
 class TestLatexSymbols:
-
     def test_maps_symbol_to_latex_string(self):
         syms = {"x": SymbolSpec(r"\(x\)")}
         result = latex_symbols(syms)
@@ -363,7 +353,6 @@ class TestLatexSymbols:
 
 
 class TestSympyToLatex:
-
     def test_simple_power(self):
         expr = Symbol("x") ** 2
         syms = {"x": SymbolSpec(r"\(x\)")}
@@ -384,7 +373,6 @@ class TestSympyToLatex:
 
 
 class TestSubstitutionsSortKey:
-
     def test_longer_left_element_sorts_first(self):
         long_sub = ("abc", "p")
         short_sub = ("ab", "p")
@@ -404,7 +392,6 @@ class TestSubstitutionsSortKey:
 
 
 class TestCreateExpressionSet:
-
     def test_plain_string_wrapped_in_list(self):
         result = create_expression_set("x+y", ExpressionParams())
         assert result == ["x+y"]
@@ -429,23 +416,22 @@ class TestCreateExpressionSet:
 
 
 class TestIsMultipleAnswersWrapper:
-
     @pytest.mark.parametrize(
-        "expr, expected", [
+        "expr, expected",
+        [
             ("{x, y}", True),
             ("{x+1}", True),
             ("{(x+1), (x-1)}", True),
             ("x+y", False),
             ("{x+1}*{x-2}", False),
             ("{x+1}*x", False),
-        ]
+        ],
     )
     def test_is_multiple_answers_wrapper(self, expr, expected):
         assert is_multiple_answers_wrapper(expr) is expected
 
 
 class TestPreprocessExpression:
-
     def test_plain_expression_succeeds(self):
         preprocessed = preprocess_expression("response", "x+y", ExpressionParams())
         success, expr, feedback = preprocessed.success, preprocessed.expression, preprocessed.feedback
@@ -462,10 +448,9 @@ class TestPreprocessExpression:
 
     def test_ambiguous_pipes_returns_failure(self):
         preprocessed = preprocess_expression("response", "|x|y|z|", ExpressionParams())
-        success, expr, feedback = preprocessed.success, preprocessed.expression, preprocessed.feedback
-        assert success is False
-        assert feedback is not None
-        assert feedback.tag == "ABSOLUTE_VALUE_NOTATION_AMBIGUITY"
+        assert preprocessed.success is False
+        assert preprocessed.feedback is not None
+        assert preprocessed.feedback.tag == "ABSOLUTE_VALUE_NOTATION_AMBIGUITY"
 
     def test_square_brackets_converted(self):
         preprocessed = preprocess_expression("response", "[x+y]", ExpressionParams())
@@ -475,13 +460,14 @@ class TestPreprocessExpression:
         assert feedback is None
 
     @pytest.mark.parametrize(
-        "expr", [
+        "expr",
+        [
             "[x+y)",
             "(x+y]",
             "{x+y)",
             "[x+y",
             "x+y]",
-        ]
+        ],
     )
     def test_mismatched_brackets_returns_failure(self, expr):
         preprocessed = preprocess_expression("response", expr, ExpressionParams())

@@ -32,7 +32,6 @@ line-length = 120
 # (see docs/refactor/). tools/parity/capture_v0_1.py targets the frozen
 # v0.1 API and is kept verbatim.
 extend-exclude = [
-    "expression_parsing",
     "units",
     "tools/parity/capture_v0_1.py",
 ]
@@ -47,13 +46,17 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N"]
 # symbols (Ω, µ, Å) is the point of this code.
 ignore = ["RUF001", "RUF002", "RUF003"]
 
+[tool.ruff.lint.per-file-ignores]
+# Test cases and names carried over verbatim from compareExpressions.
+"*/tests/*" = ["E501", "N802"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["compareexpressions"]
 
 [tool.mypy]
 python_version = "3.11"
 # Packages are added here as their refactor phase lands (see docs/refactor/).
-files = ["tools/parity/corpus.py", "tools/parity/check.py", "slr_parsing/src", "criteria/src"]
+files = ["tools/parity/corpus.py", "tools/parity/check.py", "slr_parsing/src", "criteria/src", "expression_parsing/src"]
 namespace_packages = true
 explicit_package_bases = true
 mypy_path = [
@@ -71,7 +74,6 @@ warn_unused_ignores = true
 # Each package leaves this list in its refactor phase.
 [[tool.mypy.overrides]]
 module = [
-    "compareexpressions.expression_parsing.*",
     "compareexpressions.units.*",
 ]
 follow_imports = "silent"
@@ -95,3 +97,18 @@ warn_return_any = true
 no_implicit_reexport = true
 strict_equality = true
 extra_checks = true
+
+# SymPy's own annotations are too loose for the strict flags; require typed
+# definitions and check their bodies.
+[[tool.mypy.overrides]]
+module = ["compareexpressions.expression_parsing", "compareexpressions.expression_parsing.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_reexport = true
+strict_equality = true
+
+# Neither ships type information.
+[[tool.mypy.overrides]]
+module = ["latex2sympy2", "sympy", "sympy.*"]
+ignore_missing_imports = true

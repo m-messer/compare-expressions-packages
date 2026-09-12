@@ -122,7 +122,9 @@ def substitute_input_symbols(exprs: str | Sequence[str], params: ExpressionParam
                     continue  # the task uses this name for one of its own symbols
                 if name in expr:
                     substitutions.append((name, " " + name))
-                substitutions += [(alias, " " + name) for alias in aliases if alias in expr and alias not in symbol_aliases]
+                substitutions += [
+                    (alias, " " + name) for alias in aliases if alias in expr and alias not in symbol_aliases
+                ]
 
     for code, spec in params.symbols.items():
         substitutions.append((code, code))
