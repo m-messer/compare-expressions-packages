@@ -17,6 +17,10 @@ compareexpressions-evaluation-result = { path = "evaluation_result", develop = t
 compareexpressions-criteria = { path = "criteria", develop = true }
 compareexpressions-expression-parsing = { path = "expression_parsing", develop = true }
 compareexpressions-units = { path = "units", develop = true }
+# Dev-only: tests check the criteria feedback helpers against the real
+# lf_toolkit Result. Not a runtime dependency until lf_toolkit stops shipping
+# its dev tools as runtime requirements (docs/refactor/upstream-lf-toolkit.md).
+lf-toolkit = { git = "https://github.com/lambda-feedback/toolkit-python.git", rev = "ae52fa6f23c585f2595e6f32dc56ac8984c8fc50" }
 pytest = "^9.1"
 pytest-cov = "^7.0"
 ruff = "^0.16"
