@@ -144,7 +144,7 @@ url = "expression_parsing"
 
 [[package]]
 name = "compareexpressions-slr-parsing"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generic SLR(1) parser engine extracted from compareExpressions."
 optional = false
 python-versions = ">=3.11"

@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "compareexpressions-slr-parsing"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generic SLR(1) parser engine extracted from compareExpressions."
 requires-python = ">=3.11"
 dependencies = []

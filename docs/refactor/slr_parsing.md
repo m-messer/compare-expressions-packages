@@ -1,59 +1,61 @@
-# Phase 1: `compareexpressions.slr_parsing`
+# Phase 1: `compareexpressions.slr_parsing`: done
 
-No dependencies. The source is currently a single `parser.py` (845 lines).
+No dependencies. The single `parser.py` (845 lines) is now 7 modules. Released as `0.2.0`; see [`slr_parsing/CHANGELOG.md`](../../slr_parsing/CHANGELOG.md) for the migration table.
 
 ## Target modules
 
 | Module | Contents |
 |---|---|
-| `tokens.py` | `Token`, `ExprNode`, traversal steps (`traverse_prefix/postfix/infix/group`) |
-| `actions.py` | Reduction actions: `proceed, package, append, append_last, join, create_node, relabel, group, operate, infix, insert_infix, compose, flatten` |
-| `tags.py` | Tag helpers, renamed `add_tag`, `remove_tag`, `replace_tag`, `inherit_tags`, `union_rule`, `intersection_rule` |
-| `grammar.py` | NamedTuples `TokenRule(pattern, label, matcher=None)`, `Production(head, body, action)`, `ErrorHandler(condition, action)` |
-| `parser.py` | `SLRParser`, with `__init__` split into `_check_duplicate_productions`, `_tokenise_productions`, `_classify_symbols`, `_compute_first`, `_compute_follow`, `_build_states`, `_build_table`, `_resolve_conflicts`, `_report_unreachable`. Also `scan`, `parse` and debug printers. |
-| `builder.py` | `build_expression_parser(...)` |
-| `errors.py` | `SLRError` → `GrammarError`, `ScanError`, `ParseError` (attributes `state`, `lookahead`, `stack`, `output`; the debug dump lives in `details()`), `new_root_on_error`, `discard_output_until_on_error` |
+| `tokens.py` | `Token`, `ExprNode`, traversal steps |
+| `actions.py` | Reduction actions (`proceed`, `append`, `append_last`, `join`, `create_node`, `relabel`, `group`, `operate`, `infix`, `insert_infix`, `compose`, `flatten`) |
+| `tags.py` | `add_tag`, `remove_tag`, `replace_tag`, `inherit_tags`, `union_rule`, `intersection_rule` |
+| `grammar.py` | Documented grammar format; `Production`, `ErrorHandler` named tuples; type aliases; `catch_undefined` |
+| `parser.py` | `SLRParser`, with `__init__` split into `_prepare_scanner`, `_check_duplicate_productions`, `_tokenise_productions`, `_classify_symbols`, `_compute_first`, `_compute_follow`, `_build_states`, `_build_table`/`_resolve`, `_report_unreachable` |
+| `builder.py` | `build_expression_parser` |
+| `errors.py` | `SLRError` → `GrammarError`, `ScanError`, `ParseError` (with `details()`), plus `new_root_on_error` |
+
+**Deviation:** there is no `TokenRule` named tuple. Token specifications distinguish 2-tuples (literal patterns) from 3-tuples (matcher / catch-all / grammar-only) by length, so a `TokenRule(pattern, label, matcher=None)` would be ambiguous. The three shapes are documented in `grammar.py` and typed as `TokenSpec` instead.
 
 ## Checklist
 
-### Bugs (regression test first, one commit each)
+### Bugs (regression test, one commit each)
 
-- [ ] `ExprNode(tags=set())` is a mutable default shared by every node without a tag handler: `a.tags.add('X')` leaks onto unrelated nodes. `copy()` also shares the tags set.
-- [ ] `SLR_expression_parser` does `undefined += (None,)` when it should extend `expression_node`, so the expression-node symbol becomes a literal token regex. The convention parser then scans `"E"` as `EXPRESSION_NODE`, and `parse_expression("2E")` crashes (end-to-end test in Phase 3).
-- [ ] `parse()` with leftover tokens after ACCEPT does `output += ExprNode(self.parse(tokens), [])`, which always raises. Change it to `output += self.parse(tokens)`.
-- [ ] `group(empty=True)` swaps the labels on its synthetic delimiter tokens.
-- [ ] `SLRParser.__init__` sorts the caller's `token_list` in place. Copy it first.
-- [ ] `scan()` with an unknown `mode` raises `UnboundLocalError`. Validate against `Literal["expression", "bnf"]`.
-- [ ] `ExprNode.__str__` only shows tags when `len > 1`; it should be `len > 0`.
-- [ ] `package()` does `"".join(str(children))`, which stringifies the whole list.
-- [ ] `operate()` checks `< 0` but its message says "at least one". Make them agree.
+- [x] `ExprNode(tags=set())` mutable default shared by all nodes; `copy()` shared the set; **also found:** `tag_transfer` returned a single child's own set as the parent's tags.
+- [x] Custom `expression_node` became a literal token regex, so `2E`/`xE` failed to parse. 6 parity probes now parse.
+- [x] `parse()` crashed on tokens left after ACCEPT; `new_root_on_error` also dropped the offending token.
+- [x] `SLRParser` sorted the caller's `token_list` in place.
+- [x] `scan()` with an unknown mode raised `UnboundLocalError`.
+- [x] `ExprNode.__str__` hid a single tag. The empty-tags spacing changed in 28 criteria parity probes (cosmetic).
+- [x] `operate(0)` accepted (and would consume the whole output stack).
+- [x] `package()` stored the list repr of its children, and `discard_output_until_on_error` could never work: **both removed**, since neither was used.
+- [ ] ~~`group(empty=True)` swapped delimiter labels~~: not observable (only the contents are used); fixed as part of the tidy-up.
+- [x] **Found during the refactor:** reductions keyed by production body (productions sharing a body ran the last one's action).
+- [x] **Found during the refactor:** infix productions built from `op[0]`, the first character of the operator, which broke multi-character operators.
+- [x] **Found during the refactor:** `traverse_group` called the action twice per group, which duplicated units' `REVERTED_UNIT` messages (6 parity probes deduplicated).
+- [x] **Found during the refactor:** `parse([])` raised `IndexError`; it now raises `ParseError("Unexpected end of input.")`.
 
-### Restructure (no behaviour change)
+### Restructure
 
-- [ ] Split `parser.py` into the modules above.
-- [ ] Break `SLRParser.__init__` into the named table-building steps.
-- [ ] Precompute the catch-undefined token and the rule/symbol partition in `__init__`, not per `scan()`; compile regexes once; memoise `closure()` during table construction.
-- [ ] Remove the dead `break` after `raise`, the duplicate `self.parsing_table =`, and the `state_string` / `state_string_list` duplication.
-- [ ] Unreachable-state reporting uses `logging` instead of `print`.
-- [ ] Bare `Exception` → `GrammarError` / `ScanError` / `ParseError`.
-- [ ] Document that `Token.__eq__`/`__hash__` compare by label only; the parser relies on this.
+- [x] Split into the modules above (verbatim move first, then the tidy-up).
+- [x] Named table-building steps. The parse tables were verified **identical** to the previous code for all 12 grammars in the repo (criteria; both conventions; units strict/natural × 4 unit sets; a builder grammar).
+- [x] Scanner partitions and regexes compiled once; `closure()` memoised. Construction was already only a few ms per grammar, so the real performance win is caching parsers in consumers (Phases 3–4).
+- [x] Dead code removed (`break` after `raise`, duplicate assignments, `state_string_list`, unused `group_node`).
+- [x] `logging` instead of `print`/`verbose`.
+- [x] Exception hierarchy.
+- [x] Documented `Token` label-only equality.
 
-### API (break freely, recorded in `CHANGELOG.md`)
+### API
 
-- [ ] `SLR_Parser` → `SLRParser`
-- [ ] `SLR_expression_parser` → `build_expression_parser`
-- [ ] `costum_tokens` / `costum_productions` → `custom_tokens` / `custom_productions`
-- [ ] Mutable default args (`nodes=[]`, `delimiters=["", ""]`, `error_handler=[]`) → `None`/tuples
-- [ ] `default_error_action(parser, ...)` → a proper method
-- [ ] Tag helper renames (see `tags.py` above)
+- [x] Renames recorded in `CHANGELOG.md` (`SLRParser`, `build_expression_parser`, `custom_*`, tag helpers).
+- [x] Mutable defaults → tuples/`None`.
+- [x] `default_error_action` → `SLRParser._parse_error`.
 
 ### Types & lint
 
-- [ ] Full type hints; `mypy --strict` clean.
-- [ ] `ruff check` / `ruff format` clean.
+- [x] Full type hints; strict mypy flags (spelled out per module, since `strict` is global-only).
+- [x] ruff lint and format.
 
-### Tests to add
+### Tests added (22 → 45)
 
-- [ ] FIRST/FOLLOW and table construction on a textbook grammar.
-- [ ] Scanner: longest match, custom matcher, catch-undefined, undefined input without a catch-all → `ScanError`.
-- [ ] Error-handler dispatch.
+- [x] `test_regressions.py`: one test per bug above.
+- [x] `test_engine.py`: FIRST/FOLLOW and state count on the textbook grammar, precedence and associativity, scanner (longest match, matchers, catch-all, `ScanError`), `ParseError` messages and `details()`, error-handler dispatch and state items, debug tracing via logging.

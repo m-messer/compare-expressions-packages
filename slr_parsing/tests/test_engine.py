@@ -1,0 +1,207 @@
+"""Engine tests on the textbook expression grammar.
+
+E -> E + T | T        T -> T * F | F        F -> ( E ) | id
+"""
+
+import logging
+import re
+
+import pytest
+
+from compareexpressions.slr_parsing import (
+    ErrorHandler,
+    GrammarError,
+    ParseError,
+    ScanError,
+    SLRError,
+    SLRParser,
+    catch_undefined,
+    create_node,
+    group,
+    infix,
+    proceed,
+)
+
+
+def identifier(text):
+    match = re.match(r"[a-z]+", text)
+    return (match.group(), match.group()) if match else (None, None)
+
+
+TOKENS = [
+    ("START", "START"),
+    ("END", "END"),
+    ("NULL", "NULL"),
+    ("E", "E"),
+    ("T", "T"),
+    ("F", "F"),
+    (r"\+", "PLUS"),
+    (r"\*", "TIMES"),
+    (r"\(", "LPAR"),
+    (r"\)", "RPAR"),
+    ("id", "ID", identifier),
+]
+
+PRODUCTIONS = [
+    ("START", "E", proceed),
+    ("E", "E+T", infix),
+    ("E", "T", proceed),
+    ("T", "T*F", infix),
+    ("T", "F", proceed),
+    ("F", "(E)", group(1)),
+    ("F", "id", create_node),
+]
+
+
+def make_parser(**kwargs):
+    return SLRParser(TOKENS, PRODUCTIONS, "START", "END", "NULL", **kwargs)
+
+
+def shape(node):
+    """Compact tree shape, e.g. PLUS(a, TIMES(b, c))."""
+    if not node.children:
+        return node.content
+    return f"{node.label}({', '.join(shape(child) for child in node.children)})"
+
+
+def parse(text, parser=None):
+    parser = parser or make_parser()
+    return parser.parse(parser.scan(text))
+
+
+class TestTableConstruction:
+    def test_first_and_follow_sets(self):
+        # Checked through private attributes: these are the core of SLR(1).
+        parser = make_parser()
+
+        def labels(tokens):
+            return {t.label for t in tokens}
+
+        first = {nt.label: labels(parser._first_dict[nt]) for nt in parser._nonterminals}
+        follow = {nt.label: labels(parser._follow[nt]) for nt in parser._nonterminals}
+        assert first == {"START": {"LPAR", "ID"}, "E": {"LPAR", "ID"}, "T": {"LPAR", "ID"}, "F": {"LPAR", "ID"}}
+        assert follow == {
+            "START": {"END"},
+            "E": {"END", "PLUS", "RPAR"},
+            "T": {"END", "PLUS", "RPAR", "TIMES"},
+            "F": {"END", "PLUS", "RPAR", "TIMES"},
+        }
+
+    def test_canonical_state_count(self):
+        # The canonical LR(0) collection for this grammar (plus START) has 12 states.
+        assert len(make_parser().states) == 12
+
+    def test_duplicate_productions_are_rejected(self):
+        with pytest.raises(GrammarError, match="duplicate"):
+            SLRParser(TOKENS, [*PRODUCTIONS, ("F", "id", proceed)], "START", "END", "NULL")
+
+    def test_only_one_catch_all_token(self):
+        tokens = [*TOKENS, ("U", "UNDEFINED", catch_undefined), ("V", "OTHER", catch_undefined)]
+        with pytest.raises(GrammarError, match="catch undefined"):
+            SLRParser(tokens, PRODUCTIONS, "START", "END", "NULL")
+
+    def test_production_without_action_fails_when_reduced(self):
+        productions = [*PRODUCTIONS[:-1], ("F", "id", None)]
+        parser = SLRParser(TOKENS, productions, "START", "END", "NULL")
+        with pytest.raises(GrammarError, match="no reduction action"):
+            parser.parse(parser.scan("a"))
+
+
+class TestParsing:
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            ("a", "a"),
+            ("a+b*c", "PLUS(a, TIMES(b, c))"),
+            ("a*b+c", "PLUS(TIMES(a, b), c)"),
+            ("a+b+c", "PLUS(PLUS(a, b), c)"),
+            ("(a+b)*c", "TIMES(GROUP(PLUS(a, b)), c)"),
+        ],
+    )
+    def test_precedence_and_associativity(self, text, expected):
+        [root] = parse(text)
+        assert shape(root) == expected
+        assert root.content_string() == text
+
+    def test_original_string_of_subtree(self):
+        [root] = parse("a+bb*c")
+        assert root.children[1].original_string() == "bb*c"
+
+
+class TestScanner:
+    def test_longest_match_wins(self):
+        tokens = [("START", "START"), ("END", "END"), ("NULL", "NULL"), ("<", "LT"), ("<=", "LE")]
+        parser = SLRParser(tokens, [("START", "<=", proceed), ("START", "<", proceed)], "START", "END", "NULL")
+        assert [t.label for t in parser.scan("<=<")] == ["LE", "LT"]
+
+    def test_matcher_tokens_carry_their_content(self):
+        assert [(t.label, t.content, t.start, t.end) for t in make_parser().scan("ab+c")] == [
+            ("ID", "ab", 0, 1),
+            ("PLUS", "+", 2, 2),
+            ("ID", "c", 3, 3),
+        ]
+
+    def test_undefined_text_without_catch_all_is_a_scan_error(self):
+        with pytest.raises(ScanError, match=r"Undefined input: \$"):
+            make_parser().scan("a$b")
+
+    def test_catch_all_token_collects_undefined_runs(self):
+        parser = SLRParser([*TOKENS, ("U", "UNDEFINED", catch_undefined)], PRODUCTIONS, "START", "END", "NULL")
+        assert [(t.label, t.content) for t in parser.scan("a+$$")] == [("ID", "a"), ("PLUS", "+"), ("UNDEFINED", "$$")]
+
+
+class TestErrors:
+    @pytest.mark.parametrize(
+        ("text", "message"),
+        [
+            ("a+", "Unexpected end of input."),
+            ("", "Unexpected end of input."),
+            ("a+*b", "Unexpected TIMES '*' at position 2."),
+        ],
+    )
+    def test_parse_error_messages(self, text, message):
+        with pytest.raises(ParseError) as info:
+            parse(text)
+        assert str(info.value) == message
+        assert isinstance(info.value, SLRError)
+        assert isinstance(info.value, ValueError)
+
+    def test_parse_error_details(self):
+        with pytest.raises(ParseError) as info:
+            parse("a+*b")
+        details = info.value.details()
+        assert "remaining: [ID: b, END: END]" in details
+        assert info.value.lookahead.label == "TIMES"
+
+    def test_first_matching_error_handler_runs(self):
+        class IncompleteError(Exception):
+            pass
+
+        def incomplete(*args):
+            raise IncompleteError
+
+        handlers = [
+            ErrorHandler(lambda items, next_symbol: next_symbol.label == "END", incomplete),
+            ErrorHandler(lambda items, next_symbol: True, lambda *args: pytest.fail("second handler ran")),
+        ]
+        with pytest.raises(IncompleteError):
+            parse("a+", make_parser(error_handler=handlers))
+
+    def test_error_condition_receives_the_state_items(self):
+        seen = []
+
+        def condition(items, next_symbol):
+            seen.append(("".join(t.content for t in items[0][0]), next_symbol.label))
+            return False
+
+        make_parser(error_handler=[(condition, None)])
+        assert ("E+", "END") in seen
+
+
+def test_parse_tracing_is_logged(caplog):
+    with caplog.at_level(logging.DEBUG, logger="compareexpressions.slr_parsing.parser"):
+        parse("a+b")
+    messages = [record.getMessage() for record in caplog.records]
+    assert any(m.startswith("shift to") for m in messages)
+    assert any(m.startswith("reduce by E --> E+T") for m in messages)
+    assert messages[-1] == "accept"
