@@ -238,6 +238,40 @@
    "sympy": "lamda"
   }
  },
+ "quantity.parse|legacy|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 kilogram) (metre/second)",
+   "dimension": "2*10**3*mass*length/time",
+   "expanded_unit": "2*10**3*gram*metre/second",
+   "latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "messages": [],
+   "standard_unit": "2*10**3*gram*metre/second",
+   "standard_value": null,
+   "unit": "(2 kg) (m/s)",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "value": null,
+   "value_latex": null
+  }
+ },
+ "quantity.parse|legacy|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 metre) second",
+   "dimension": "2*length*time",
+   "expanded_unit": "2*metre*second",
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "messages": [],
+   "standard_unit": "2*metre*second",
+   "standard_value": null,
+   "unit": "(2 m) s",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "value": null,
+   "value_latex": null
+  }
+ },
  "quantity.parse|legacy|(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)": {
   "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
   "value": {
@@ -470,6 +504,40 @@
    "value_latex": "2"
   }
  },
+ "quantity.parse|natural_si|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 kilogram) (metre/second)",
+   "dimension": "2*10**3*mass*length/time",
+   "expanded_unit": "2*10**3*gram*metre/second",
+   "latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "messages": [],
+   "standard_unit": "2*10**3*gram*metre/second",
+   "standard_value": null,
+   "unit": "(2 kg) (m/s)",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "value": null,
+   "value_latex": null
+  }
+ },
+ "quantity.parse|natural_si|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 metre) second",
+   "dimension": "2*length*time",
+   "expanded_unit": "2*metre*second",
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "messages": [],
+   "standard_unit": "2*metre*second",
+   "standard_value": null,
+   "unit": "(2 m) s",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "value": null,
+   "value_latex": null
+  }
+ },
  "quantity.parse|natural_si|(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)": {
   "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
   "value": {
@@ -648,6 +716,40 @@
    "unit_latex": null,
    "value": "(kilogrammegametre^2)/(fs^4daA)",
    "value_latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}"
+  }
+ },
+ "quantity.parse|natural|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 kilogram) (metre/second)",
+   "dimension": "2*10**3*mass*length/time",
+   "expanded_unit": "2*10**3*gram*metre/second",
+   "latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "messages": [],
+   "standard_unit": "2*10**3*gram*metre/second",
+   "standard_value": null,
+   "unit": "(2 kg) (m/s)",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "value": null,
+   "value_latex": null
+  }
+ },
+ "quantity.parse|natural|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 metre) second",
+   "dimension": "2*length*time",
+   "expanded_unit": "2*metre*second",
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "messages": [],
+   "standard_unit": "2*metre*second",
+   "standard_value": null,
+   "unit": "(2 m) s",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "value": null,
+   "value_latex": null
   }
  },
  "quantity.parse|natural|(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)": {
@@ -882,6 +984,40 @@
    "value_latex": "2"
   }
  },
+ "quantity.parse|strict_all|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 kilogram) (metre/second)",
+   "dimension": "2*10**3*mass*length/time",
+   "expanded_unit": "2*10**3*gram*metre/second",
+   "latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "messages": [],
+   "standard_unit": "2*10**3*gram*metre/second",
+   "standard_value": null,
+   "unit": "(2 kg) (m/s)",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "value": null,
+   "value_latex": null
+  }
+ },
+ "quantity.parse|strict_all|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 metre) second",
+   "dimension": "2*length*time",
+   "expanded_unit": "2*metre*second",
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "messages": [],
+   "standard_unit": "2*metre*second",
+   "standard_value": null,
+   "unit": "(2 m) s",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "value": null,
+   "value_latex": null
+  }
+ },
  "quantity.parse|strict_all|2 liters": {
   "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
   "value": {
@@ -954,6 +1090,54 @@
    "value_latex": "2 \\cdot litres"
   }
  },
+ "quantity.parse|strict_si|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 kilogram) (metre/second)",
+   "dimension": "2*10**3*mass*length/time",
+   "expanded_unit": "2*10**3*gram*metre/second",
+   "latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "messages": [],
+   "standard_unit": "2*10**3*gram*metre/second",
+   "standard_value": null,
+   "unit": "(2 kg) (m/s)",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "value": null,
+   "value_latex": null
+  }
+ },
+ "quantity.parse|strict_si|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "content": "(2 metre) second",
+   "dimension": "2*length*time",
+   "expanded_unit": "2*metre*second",
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "messages": [],
+   "standard_unit": "2*metre*second",
+   "standard_value": null,
+   "unit": "(2 m) s",
+   "unit_factor": "1",
+   "unit_latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "value": null,
+   "value_latex": null
+  }
+ },
+ "quantity.preview|legacy|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{kilogram})~( \\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "sympy": "(2 kg) (m/s)"
+  }
+ },
+ "quantity.preview|legacy|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "sympy": "(2 m) s"
+  }
+ },
  "quantity.preview|legacy|2 liters": {
   "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
   "value": {
@@ -966,6 +1150,34 @@
   "value": {
    "latex": "2~\\mathrm{litre}",
    "sympy": "2 litres"
+  }
+ },
+ "quantity.preview|natural_si|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "sympy": "(2 kg) (m/s)"
+  }
+ },
+ "quantity.preview|natural_si|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "sympy": "(2 m) s"
+  }
+ },
+ "quantity.preview|natural|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "sympy": "(2 kg) (m/s)"
+  }
+ },
+ "quantity.preview|natural|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "sympy": "(2 m) s"
   }
  },
  "quantity.preview|natural|2 liters": {
@@ -982,6 +1194,20 @@
    "sympy": "2 litres"
   }
  },
+ "quantity.preview|strict_all|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "sympy": "(2 kg) (m/s)"
+  }
+ },
+ "quantity.preview|strict_all|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "sympy": "(2 m) s"
+  }
+ },
  "quantity.preview|strict_all|2 liters": {
   "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
   "value": {
@@ -994,6 +1220,20 @@
   "value": {
    "latex": "2 \\cdot litres",
    "sympy": "2 litres"
+  }
+ },
+ "quantity.preview|strict_si|(2 kg) (m/s)": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{kilogram})~(\\frac{\\mathrm{metre}}{\\mathrm{second}})",
+   "sympy": "(2 kg) (m/s)"
+  }
+ },
+ "quantity.preview|strict_si|(2 m) s": {
+  "reason": "units: a bracketed value+unit followed by a unit (e.g. '(2 m) s') no longer crashes; groups stay whole, so it reads like '(2 m)' alone (all unit)",
+  "value": {
+   "latex": "(2~\\mathrm{metre})~\\mathrm{second}",
+   "sympy": "(2 m) s"
   }
  }
 }

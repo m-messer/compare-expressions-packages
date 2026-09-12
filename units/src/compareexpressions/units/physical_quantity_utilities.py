@@ -113,12 +113,8 @@ class PhysicalQuantity:
             raise Exception("Unknown direction: "+str(direction))
         old_root = self.ast_root
         new_root = old_root.children[1-direction]
-        if len(new_root.children) == 1:
-            old_root.children = old_root.children[1-direction:len(old_root.children)-direction]
-            a = [] if direction == 0 else [old_root]
-            b = [old_root] if direction == 0 else []
-            new_root.children = a+new_root.children+b
-        elif len(new_root.children) > 1:
+        # Only binary nodes can be rotated; groups (one child) are atomic.
+        if len(new_root.children) > 1:
             switch = new_root.children[-direction]
             old_root.children[1-direction] = switch
             new_root.children[-direction] = old_root
@@ -145,11 +141,12 @@ class PhysicalQuantity:
         return
 
     def _rotate_until_root_is_split(self):
+        # Rotate only into binary nodes: a group (e.g. "(2 m)") is kept whole.
         if self.ast_root.label == "SPACE":
-            if QuantityTags.U not in self.ast_root.tags and len(self.ast_root.children[1].children) > 0:
+            if QuantityTags.U not in self.ast_root.tags and len(self.ast_root.children[1].children) > 1:
                 self._rotate_left()
                 self._rotate_until_root_is_split()
-            elif QuantityTags.U in self.ast_root.children[0].tags and len(self.ast_root.children[0].children) > 0:
+            elif QuantityTags.U in self.ast_root.children[0].tags and len(self.ast_root.children[0].children) > 1:
                 self._rotate_right()
                 self._rotate_until_root_is_split()
         return

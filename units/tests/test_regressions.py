@@ -22,7 +22,6 @@ class TestUnitData:
 
 
 class TestParsing:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: rotating a SPACE node into a group builds a cycle")
     @pytest.mark.parametrize("expr", ["(2 m) s", "(2 m) (s)", "(x m) s"])
     def test_grouped_quantity_followed_by_a_unit(self, expr):
         # Groups are atomic: as for "(2 m)" alone, the whole input is the unit.
