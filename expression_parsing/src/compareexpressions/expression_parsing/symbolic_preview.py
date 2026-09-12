@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from sympy.parsing.sympy_parser import T as parser_transformations
 from .expression_utilities import (
     default_parameters,
@@ -72,9 +74,9 @@ def preview_function(response: str, params: Params) -> Result:
     The way you wish to structure you code (all in this function, or
     split into many) is entirely up to you.
     """
-    for (key, value) in default_parameters.items():
-        if key not in params.keys():
-            params.update({key: value})
+    # Work on a copy: the steps below update params (defaults, "rationalise",
+    # normalised symbols), and the caller's dict must not change.
+    params = deepcopy({**default_parameters, **params})
 
     original_response = response
 

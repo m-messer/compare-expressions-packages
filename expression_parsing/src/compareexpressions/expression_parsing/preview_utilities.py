@@ -9,6 +9,7 @@ from latex2sympy2 import latex2sympy
 
 from copy import deepcopy
 
+from .errors import LatexParseError
 from .expression_utilities import (
     default_parameters,
     extract_latex,
@@ -129,12 +130,8 @@ def parse_latex(response: str, symbols: SymbolDict, simplify: bool, parameters=N
     Returns:
         str: The expression in sympy syntax.
     """
-    if parameters is not None:
-        for (key, value) in default_parameters.items():
-            if key not in parameters.keys():
-                parameters.update({key: value})
-    else:
-        parameters = deepcopy(default_parameters)
+    # Work on a copy: substitute_input_symbols normalises parameters["symbols"] in place.
+    parameters = deepcopy({**default_parameters, **(parameters or {})})
 
     substitutions = {}
 
@@ -162,7 +159,7 @@ def parse_latex(response: str, symbols: SymbolDict, simplify: bool, parameters=N
         symbol_str = symbols[sympy_symbol_str]["latex"]
         latex_symbol_str = extract_latex(symbol_str)
 
-        if "\pm" not in symbol_str and "\mp" not in symbol_str:
+        if r"\pm" not in symbol_str and r"\mp" not in symbol_str:
             try:
                 latex_symbol_str_postprocess = latex2sympy(latex_symbol_str)
             except Exception:
@@ -172,10 +169,7 @@ def parse_latex(response: str, symbols: SymbolDict, simplify: bool, parameters=N
                     latex_symbol_str_postprocess = postprocess_E(latex_symbol_parsed, replacements)
 
                 except Exception:
-                    raise ValueError(
-                        f"Couldn't parse latex symbol {latex_symbol_str} "
-                        f"to sympy symbol."
-                    )
+                    raise LatexParseError(f"Couldn't parse latex symbol {latex_symbol_str} to sympy symbol.")
             substitutions[latex_symbol_str_postprocess] = Symbol(sympy_symbol_str)
 
 
@@ -192,8 +186,8 @@ def parse_latex(response: str, symbols: SymbolDict, simplify: bool, parameters=N
                         local_dict={'Symbol': Symbol,'E': Symbol("E")}
                     )
                     substitutions[parsed_alias] = Symbol(sympy_symbol_str)
-                except Exception as e:
-                    print(e)
+                except Exception:
+                    # Not an expression: substitute the alias as a plain symbol name.
                     substitutions[Symbol(alias)] = Symbol(sympy_symbol_str)
 
 
@@ -210,7 +204,7 @@ def parse_latex(response: str, symbols: SymbolDict, simplify: bool, parameters=N
 
                 expression_postprocess = postprocess_E(expression_parsed, replacements)
             except Exception as e:
-                raise ValueError("Failed to pass expression during preview: ", str(e))
+                raise LatexParseError(f"Failed to parse expression during preview: {e}") from e
 
         if simplify is True:
             expression_postprocess = expression_postprocess.simplify()

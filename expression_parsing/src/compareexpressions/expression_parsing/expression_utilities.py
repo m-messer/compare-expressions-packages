@@ -655,12 +655,7 @@ def sympy_to_latex(equation, symbols, settings=None):
         "symbol_names": latex_symbols(symbols),
         "ln_notation": True,
     }
-    if settings is None:
-        settings = default_settings
-    else:
-        for key in default_settings.keys():
-            if key not in settings.keys():
-                settings[key] = default_settings[key]
+    settings = {**default_settings, **(settings or {})}
     latex_out = ModifiedLatexPrinter(settings).doprint(equation)
     return latex_out
 

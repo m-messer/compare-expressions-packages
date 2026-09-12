@@ -12,6 +12,7 @@ from compareexpressions.expression_parsing.expression_utilities import (
     create_sympy_parsing_params,
     parse_expression,
     substitute_input_symbols,
+    sympy_to_latex,
 )
 from compareexpressions.expression_parsing.preview_utilities import parse_latex
 from compareexpressions.expression_parsing.symbolic_preview import preview_function
@@ -80,14 +81,17 @@ class TestInputSymbols:
 
 
 class TestNoSideEffects:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: preview_function mutates the caller's params")
     def test_preview_does_not_mutate_params(self):
         params = {"symbols": {"x": {"latex": "x", "aliases": ["xx"]}}}
         before = deepcopy(params)
         preview_function("xx + 1", params)
         assert params == before
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: parse_latex prints alias errors and raises a tuple message")
+    def test_sympy_to_latex_does_not_mutate_settings(self):
+        settings = {"mul_symbol": r" \cdot "}
+        sympy_to_latex(parse_expression("2x", parsing_params()), {}, settings=settings)
+        assert settings == {"mul_symbol": r" \cdot "}
+
     def test_parse_latex_reports_errors_cleanly(self, capsys):
         parse_latex("x", {"x": {"latex": "x", "aliases": ["1+"]}}, False)
         assert capsys.readouterr().out == ""
