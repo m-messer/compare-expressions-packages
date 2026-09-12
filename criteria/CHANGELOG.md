@@ -32,4 +32,6 @@ Behaviour differences to be aware of when adopting:
 - `build_tree` on an unknown label raises a `ValueError` naming the label. It used to raise `AttributeError` from formatting the message with the missing node.
 - `add_node` works for evaluation nodes (it read a nonexistent `sufficiencies` attribute) and keeps the node's `evaluate` function and a criterion's `feedback_string_generator` (both were dropped).
 - Graph nodes are hashable and compare unequal to non-nodes, instead of raising `AttributeError`.
+- **Deterministic results.** `generate_feedback` ran evaluations (and so ordered the returned criteria), and `CriteriaGraph.mermaid()` ordered its edge lines, by set iteration, which varies with Python's hash seed. Both now follow graph order: evaluations breadth-first in attachment order. `starting_evaluations` returns an ordered, de-duplicated **list** (was a set).
+- `starting_evaluations` terminates when sufficiencies form a cycle; it used to loop forever.
 - A failing `evaluate` function raises `CriteriaEvaluationError` (with the original exception chained) instead of printing the evaluation label and the whole evaluations dict to stdout.

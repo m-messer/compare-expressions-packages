@@ -1,5 +1,9 @@
 """Regression tests for bugs carried over from the v0.1 extraction."""
 
+import os
+import subprocess
+import sys
+
 import pytest
 
 from compareexpressions.criteria import CriteriaGraph, generate_criteria_parser
@@ -69,3 +73,40 @@ class TestGraph:
             graph.generate_feedback("x", "E1_TRUE")
         assert isinstance(info.value.__cause__, RuntimeError)
         assert capsys.readouterr().out == ""
+
+
+DETERMINISM_SCRIPT = """
+from compareexpressions.criteria import CriteriaGraph
+g = CriteriaGraph("g")
+g.add_evaluation_node("START", "s", "d", evaluate=lambda r: {"A": None, "B": None, "C": None})
+for c in "ABC":
+    g.attach("START", c, summary=c, details=c)
+    g.attach(c, "E" + c, summary=c, details=c, evaluate=(lambda c: lambda r: {c + "_OK": None})(c))
+    g.attach("E" + c, c + "_OK", summary=c, details=c)
+print(list(g.generate_feedback("r", "START")))
+print(g.mermaid())
+"""
+
+
+class TestDeterminism:
+    def test_feedback_and_mermaid_do_not_depend_on_the_hash_seed(self):
+        outputs = {
+            subprocess.run(
+                [sys.executable, "-c", DETERMINISM_SCRIPT],
+                env={**os.environ, "PYTHONHASHSEED": str(seed)},
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout
+            for seed in (1, 2, 3, 4)
+        }
+        assert len(outputs) == 1
+        assert outputs.pop().splitlines()[0] == "['A', 'B', 'C', 'A_OK', 'B_OK', 'C_OK']"
+
+    def test_cyclic_sufficiencies_terminate(self):
+        graph = CriteriaGraph("g")
+        graph.add_evaluation_node("E1", "e1", "d", sufficiencies=["C2"])
+        graph.attach("E1", "C1", summary="c1", details="d")
+        graph.attach("C1", "E2", summary="e2", details="d", sufficiencies=["C1"])
+        graph.attach("E2", "C2", summary="c2", details="d")
+        assert list(graph.starting_evaluations("C2")) == ["E2"]

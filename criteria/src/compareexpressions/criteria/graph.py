@@ -189,8 +189,9 @@ class CriteriaGraph:
     def mermaid(self):
         output = ["flowchart TD"]
         linebreak = '<br/>---<br/>'
-        edges = set()
-        sufficiencies = set()
+        # Ordered de-duplication (dicts), so the output doesn't depend on the hash seed.
+        edges = {}
+        sufficiencies = {}
         node_sets = [self.evaluations, self.criteria, self.outputs]
         node_styles = [evaluation_style, criterion_style, output_style]
         node_keys = {}
@@ -203,9 +204,9 @@ class CriteriaGraph:
             style = node_styles[set_index]
             for (label, node) in nodes.items():
                 output.append(node_keys[label]+style[0]+'"'+label+linebreak+node.details+'"'+style[1])
-                edges.update([(node_keys[edge.source.label], node_keys[edge.target.label]) for edge in node.outgoing+node.incoming])
+                edges.update(dict.fromkeys((node_keys[edge.source.label], node_keys[edge.target.label]) for edge in node.outgoing+node.incoming))
                 if self.sufficiencies.get(label, None) is not None:
-                    sufficiencies.update([(label, sufficiency) for sufficiency in self.sufficiencies.get(label, None)])
+                    sufficiencies.update(dict.fromkeys((label, sufficiency) for sufficiency in self.sufficiencies.get(label, None)))
         for edge in edges:
             output.append(" --> ".join(edge))
         for sufficiency in sufficiencies:
@@ -312,22 +313,28 @@ class CriteriaGraph:
     def starting_evaluations(self, label):
         # TODO: Consider if starting evaluations should only accept evaluation nodes
         #       instead of guessing the intent when using criteria nodes as targets
+        # Ordered worklists (not sets): the result and the order of evaluation
+        # must not depend on the hash seed.
         if label in self.criteria.keys():
             main_criteria = self.criteria[label]
-            base_starting_evaluations = set(edge.source.label for edge in main_criteria.incoming)
+            base_starting_evaluations = list(dict.fromkeys(edge.source.label for edge in main_criteria.incoming))
         elif label in self.evaluations.keys():
-            base_starting_evaluations = set([label])
+            base_starting_evaluations = [label]
         else:
             raise Exception(f"No criterion or evaluation with label {label}.")
-        starting_evaluations = set()
-        candidate_starting_evaluations = base_starting_evaluations
-        while len(candidate_starting_evaluations) > 0:
-            label = candidate_starting_evaluations.pop()
+        starting_evaluations = []
+        candidates = list(base_starting_evaluations)
+        seen = set()
+        while candidates:
+            label = candidates.pop(0)
+            if label in seen:
+                continue  # sufficiencies can form cycles
+            seen.add(label)
             if self.sufficiencies.get(label, None) is None:
-                starting_evaluations.update([label])
+                starting_evaluations.append(label)
             else:
                 for sufficiency in self.sufficiencies.get(label, []):
-                    candidate_starting_evaluations.update([edge.source.label for edge in self.criteria[sufficiency].incoming])
+                    candidates += [edge.source.label for edge in self.criteria[sufficiency].incoming]
         if len(starting_evaluations) == 0:
             starting_evaluations = base_starting_evaluations
         return starting_evaluations
@@ -358,11 +365,11 @@ class CriteriaGraph:
         return trees
 
     def generate_feedback(self, response, main_criteria):
-        evaluations = set().union(self.starting_evaluations(main_criteria))
+        evaluations = list(self.starting_evaluations(main_criteria))
         visited_evaluations = set()
         feedback = dict()
         while len(evaluations) > 0:
-            e = evaluations.pop()
+            e = evaluations.pop(0)
             if e in self.evaluations.keys() and self.evaluations[e].replacement is not None:
                 visited_evaluations.update({e})
                 e = self.evaluations[e].replacement.label
@@ -374,6 +381,5 @@ class CriteriaGraph:
                     raise CriteriaEvaluationError(e) from exc
                 feedback.update(results)
                 for criterion in results.keys():
-                    labels = {edge.target.label for edge in self.criteria[criterion].outgoing}
-                    evaluations = evaluations.union(labels)
+                    evaluations += [edge.target.label for edge in self.criteria[criterion].outgoing]
         return feedback
