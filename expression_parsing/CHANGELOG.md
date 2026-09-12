@@ -11,3 +11,4 @@ The first release after the extraction refactor. The import path is now `compare
 ### Fixed
 
 - Inputs such as `2E` or `xE` parse (fixed in `slr_parsing`: the implicit-multiplication convention parser scanned a capital `E` as its grammar symbol).
+- `parse_expression("a=b=c")` raises `ExpressionParsingError` instead of silently returning `Eq(a, b)` (everything after the second `=` was dropped).

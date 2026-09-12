@@ -32,7 +32,7 @@ import ast
 import re
 from typing import Dict, List, TypedDict
 
-from .errors import SymbolAssumptionError
+from .errors import ExpressionParsingError, SymbolAssumptionError
 from .feedback import FeedbackTag
 
 
@@ -867,6 +867,8 @@ def parse_expression(expr_string, parsing_params):
             transformations += parser_transformations[11]
 
 
+        if expr.count("=") > 1:
+            raise ExpressionParsingError(f"An expression can contain at most one '=': {expr}")
         if "=" in expr:
             expr_parts = expr.split("=")
             lhs = parse_expr(expr_parts[0], transformations=transformations, local_dict=symbol_dict)

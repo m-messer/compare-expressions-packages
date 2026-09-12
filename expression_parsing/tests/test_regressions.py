@@ -47,7 +47,6 @@ class TestParsing:
         assert str(parse_expression("2E", parsing_params())) == "2*E"
         assert str(parse_expression("xE", parsing_params())) == "E*x"
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: 'a=b=c' silently parses as Eq(a, b)")
     def test_chained_equalities_are_rejected(self):
         with pytest.raises(ValueError, match="="):
             parse_expression("a=b=c", parsing_params())
