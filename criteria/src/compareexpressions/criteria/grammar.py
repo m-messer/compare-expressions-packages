@@ -1,13 +1,36 @@
-from compareexpressions.slr_parsing import SLRParser, catch_undefined, infix, create_node, join, proceed, append_last
+"""Grammar and parser for criteria such as ``response = answer where a = 2``.
 
-start_symbol = "START"
-end_symbol = "END"
-null_symbol = "NULL"
+Criteria are equalities and orderings between expressions, optionally with
+``where`` substitutions, plus ``written as``, ``proportional to`` and
+``contains``. Names from the reserved expressions (``response``,
+``answer``, ...) scan as ``RESERVED``; other text is ``OTHER``.
+"""
 
-base_token_list = [
-    (start_symbol, start_symbol),
-    (end_symbol, end_symbol),
-    (null_symbol, null_symbol),
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from compareexpressions.slr_parsing import (
+    Action,
+    SLRParser,
+    TokenSpec,
+    append_last,
+    catch_undefined,
+    create_node,
+    infix,
+    join,
+    proceed,
+)
+
+START_SYMBOL = "START"
+END_SYMBOL = "END"
+NULL_SYMBOL = "NULL"
+
+TOKENS: tuple[TokenSpec, ...] = (
+    (START_SYMBOL, START_SYMBOL),
+    (END_SYMBOL, END_SYMBOL),
+    (NULL_SYMBOL, NULL_SYMBOL),
     (" *BOOL *", "BOOL"),
     (" *EQUALITY *", "EQUALITY"),
     (" *EQUAL *", "EQUAL"),
@@ -21,9 +44,10 @@ base_token_list = [
     (" *contains *", "CONTAINS"),
     (" *; *", "SEPARATOR"),
     (" *OTHER *", "OTHER", catch_undefined),
-]
+)
 
-base_productions = [
+# Order matters: when productions conflict, the one listed later wins.
+PRODUCTIONS: tuple[tuple[str, str, Action], ...] = (
     ("START", "BOOL", create_node),
     ("BOOL", "EQUAL", proceed),
     ("BOOL", "ORDER", proceed),
@@ -50,45 +74,18 @@ base_productions = [
     ("OTHER", "RESERVED OTHER", join),
     ("OTHER", "OTHER RESERVED", join),
     ("OTHER", "OTHER OTHER", join),
-]
+)
 
 
-def generate_criteria_parser(reserved_expressions, token_list=base_token_list, productions=base_productions):
+def build_criteria_parser(
+    reserved_expressions: Mapping[str, Mapping[str, Any]],
+    token_list: Sequence[TokenSpec] = TOKENS,
+    productions: Sequence[tuple[str, str, Action | None]] = PRODUCTIONS,
+) -> SLRParser:
+    """A parser for criteria, where the keys of each reserved-expression group scan as ``RESERVED``.
 
-    token_list = list(token_list)
-    for value in reserved_expressions.values():
-        token_list += [(key, "RESERVED") for key in value.keys()]
-
-    return SLRParser(token_list, productions, start_symbol, end_symbol, null_symbol)
-
-
-if __name__ == "__main__":
-    test_criteria = []
-    for comparison in ["=", ">", "<", ">=", "<="]:
-        test_criteria += [
-            f"a {comparison} b",
-            f"response {comparison} b",
-            f"a {comparison} response",
-            f"response {comparison} answer",
-        ]
-    test_criteria += [
-        "response = b*answer",
-        "response = q where q = a*b",
-        "response = q+p where q = a*b; p = b*c",
-        "response written as answer",
-        "response written as a*b*c",
-        "response - answer = 0",
-    ]
-    reserved_expressions = {
-        "learner":
-            {"response": "a*b*c", },
-        "task":
-            {"answer": "c*b*a", }
-    }
-    criteria_parser = generate_criteria_parser(reserved_expressions)
-    for criteria in test_criteria:
-        tokens = criteria_parser.scan(criteria)
-        print(tokens)
-        tree = criteria_parser.parse(tokens)
-        print(tree)
-        print("---------------------------------------------------")
+    ``reserved_expressions`` maps groups (e.g. ``"learner"``, ``"task"``) to
+    ``{name: expression}``; only the names are used here.
+    """
+    reserved = [(name, "RESERVED") for group in reserved_expressions.values() for name in group]
+    return SLRParser([*token_list, *reserved], productions, START_SYMBOL, END_SYMBOL, NULL_SYMBOL)

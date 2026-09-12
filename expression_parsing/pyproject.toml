@@ -10,7 +10,7 @@ description = "SymPy-based expression parsing, preprocessing and LaTeX preview e
 # `typing.io` module removed in Python 3.13.
 requires-python = ">=3.11,<3.13"
 dependencies = [
-    "compareexpressions-slr-parsing (>=0.1.0,<0.3.0)",
+    "compareexpressions-slr-parsing (>=0.2.0,<0.3.0)",
     "sympy (>=1.12,<2.0)",
     "latex2sympy2",
     "typing_extensions",

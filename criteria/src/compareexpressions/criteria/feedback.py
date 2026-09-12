@@ -73,6 +73,6 @@ def criteria_test_data(graphs: Mapping[str, CriteriaGraph]) -> dict[str, dict[st
     ``{**result.to_dict(include_test_data=True), **criteria_test_data(graphs)}``.
     """
     return {
-        "criteria_graphs": {name: graph.json() for name, graph in graphs.items()},
-        "criteria_graphs_vis": {name: graph.mermaid() for name, graph in graphs.items()},
+        "criteria_graphs": {name: graph.to_json() for name, graph in graphs.items()},
+        "criteria_graphs_vis": {name: graph.to_mermaid() for name, graph in graphs.items()},
     }

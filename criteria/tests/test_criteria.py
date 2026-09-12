@@ -9,14 +9,13 @@ import json
 
 import pytest
 
-from compareexpressions.criteria import generate_criteria_parser, CriteriaGraph
-
+from compareexpressions.criteria import CriteriaGraph, CriteriaGraphError, build_criteria_parser
 
 RESERVED = {"learner": {"response": None}, "task": {"answer": None}}
 
 
 def _parse(criterion):
-    parser = generate_criteria_parser(RESERVED)
+    parser = build_criteria_parser(RESERVED)
     return parser.parse(parser.scan(criterion))[0]
 
 
@@ -53,7 +52,7 @@ class TestCriteriaGraph:
         g.add_criterion_node("CRIT", "crit", "crit details")
         g.add_output_node("OUT", "out", "out details")
 
-        data = json.loads(g.json())
+        data = json.loads(g.to_json())
         assert "EVAL" in data["evaluations"]
         assert "CRIT" in data["criteria"]
         assert "OUT" in data["outputs"]
@@ -61,10 +60,10 @@ class TestCriteriaGraph:
     def test_mermaid_returns_string(self):
         g = CriteriaGraph("root")
         g.add_evaluation_node("EVAL", "eval", "eval details")
-        assert isinstance(g.mermaid(), str)
+        assert isinstance(g.to_mermaid(), str)
 
     def test_duplicate_evaluation_node_rejected(self):
         g = CriteriaGraph("root")
         g.add_evaluation_node("EVAL", "eval", "eval details")
-        with pytest.raises(Exception):
+        with pytest.raises(CriteriaGraphError):
             g.add_evaluation_node("EVAL", "eval", "eval details")

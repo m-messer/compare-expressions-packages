@@ -37,8 +37,7 @@ from corpus import (  # noqa: E402
     QUANTITY_VARIANTS,
 )
 
-from compareexpressions.criteria import generate_criteria_parser  # noqa: E402
-from compareexpressions.criteria.parsing import base_token_list  # noqa: E402
+from compareexpressions.criteria import build_criteria_parser  # noqa: E402
 from compareexpressions.expression_parsing import (  # noqa: E402
     create_sympy_parsing_params,
     default_parameters,
@@ -65,7 +64,7 @@ def probe(fn: Any, *args: Any) -> Any:
 
 def criteria_tree(criterion: str) -> str:
     reserved = {"learner": {"response": "a*b*c"}, "task": {"answer": "c*b*a"}}
-    parser = generate_criteria_parser(reserved, token_list=list(base_token_list))
+    parser = build_criteria_parser(reserved)
     return parser.parse(parser.scan(criterion))[0].tree_string()
 
 

@@ -659,7 +659,7 @@ files = [
 
 [[package]]
 name = "compareexpressions-criteria"
-version = "0.1.0"
+version = "0.2.0"
 description = "Criteria DSL parser and evaluation graph extracted from compareExpressions."
 optional = false
 python-versions = ">=3.11"
@@ -668,7 +668,7 @@ files = []
 develop = true
 
 [package.dependencies]
-compareexpressions-slr-parsing = ">=0.1.0,<0.3.0"
+compareexpressions-slr-parsing = ">=0.2.0,<0.3.0"
 
 [package.source]
 type = "directory"
@@ -685,7 +685,7 @@ files = []
 develop = true
 
 [package.dependencies]
-compareexpressions-slr-parsing = ">=0.1.0,<0.3.0"
+compareexpressions-slr-parsing = ">=0.2.0,<0.3.0"
 latex2sympy2 = "*"
 sympy = ">=1.12,<2.0"
 typing_extensions = "*"
@@ -720,7 +720,7 @@ develop = true
 
 [package.dependencies]
 compareexpressions-expression-parsing = ">=0.1.0,<0.3.0"
-compareexpressions-slr-parsing = ">=0.1.0,<0.3.0"
+compareexpressions-slr-parsing = ">=0.2.0,<0.3.0"
 sympy = ">=1.12,<2.0"
 
 [package.source]

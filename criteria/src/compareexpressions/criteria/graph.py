@@ -1,385 +1,264 @@
-import json
+"""The criteria graph: evaluations, the criteria they establish, and outputs."""
 
-from .errors import CriteriaEvaluationError
+from __future__ import annotations
 
-evaluation_style = ("([", "])")
-starting_evaluation_style = (">", "]")
-criterion_style = ("[", "]")
-output_style = ("{{", "}}")
-special_style = ("[[", "]]")
+from collections.abc import Collection, Iterable, Mapping
+from typing import Any, ClassVar
+
+from .errors import CriteriaEvaluationError, CriteriaGraphError
+from .nodes import (
+    CriterionNode,
+    Edge,
+    Evaluate,
+    EvaluationNode,
+    FeedbackStringGenerator,
+    Node,
+    OutputNode,
+    no_feedback,
+)
+from .render import graph_to_json, graph_to_mermaid
+from .tree import CriteriaTree, build_tree
 
 
 class CriteriaGraph:
+    """A graph of evaluations, the criteria they establish, and outputs.
 
-    class Node:
-        def __init__(self, label, summary, details):
-            self.label = label
-            self.summary = summary
-            self.details = details
-            self.incoming = []
-            self.outgoing = []
-            return
+    Evaluations point to criteria; criteria point to further evaluations or
+    to outputs. ``generate_feedback`` walks the graph from the evaluations
+    leading to a main criterion and collects every criterion reached.
+    """
 
-        def __eq__(self, other):
-            if not isinstance(other, CriteriaGraph.Node):
-                return NotImplemented
-            return self.label == other.label and self.summary == other.summary and self.details == other.details
+    END: ClassVar[OutputNode] = OutputNode("END", "END", "Evaluation completed.")
+    """Conventional terminal output; add it with ``graph.add_node(CriteriaGraph.END)``."""
 
-        def __hash__(self):
-            return hash((self.label, self.summary, self.details))
-
-    class Evaluation(Node):
-        def __init__(self, label, summary, details, evaluate, replacement=None):
-            super().__init__(label, summary, details)
-            self.results = self.outgoing
-            self.evaluate = evaluate
-            self.replacement = replacement
-            return
-
-    class Criterion(Node):
-        def __init__(self, label, summary, details, tags=None, feedback_string_generator=None):
-            super().__init__(label, summary, details)
-            self.consequences = self.outgoing
-            if feedback_string_generator is not None:
-                self.feedback_string_generator = feedback_string_generator
-            else:
-                self.feedback_string_generator = lambda x: None
-            if tags is None:
-                self.tags = set()
-            else:
-                self.tags = tags
-            return
-
-    class Output(Node):
-        def __init__(self, label, summary, details, tags=None):
-            super().__init__(label, summary, details)
-            self.outgoing = []
-            if tags is None:
-                self.tags = set()
-            else:
-                self.tags = tags
-            return
-
-    class Edge:
-        def __init__(self, source, target):
-            self.source = source
-            self.target = target
-            return
-
-        def __eq__(self, other):
-            return self.source.label == other.source.label and self.target.label == other.target.label
-
-        def __hash__(self):
-            return (self.source.label, self.target.label).__hash__()
-
-    RETURN = Output("RETURN", "RETURN", "Reached a previously visited node.")
-    END = Output("END", "END", "Evaluation completed.")
-
-    class Tree(Node):
-
-        def __init__(self, node, parent=None, outgoing=None, identifier=0, main_criteria=None):
-            super().__init__(node.label, node.summary, node.details)
-            self.identifier = "_"+str(identifier)
-            self.style = self.get_node_style(node)
-            self.type_label = self.get_node_type(node, main_criteria)
-            if parent is not None:
-                self.incoming = [parent]
-            if isinstance(node, CriteriaGraph.Output) or outgoing is None:
-                self.outgoing = []
-            else:
-                self.outgoing = outgoing
-            return
-
-        def get_node_type(self, node, main_criteria=None):
-            if main_criteria is None:
-                main_criteria = []
-            if isinstance(node, CriteriaGraph.Evaluation):
-                type_label = "evaluation"
-            elif isinstance(node, CriteriaGraph.Criterion):
-                if node.label in main_criteria:
-                    type_label = "main_criterion"
-                else:
-                    type_label = "criterion"
-            elif isinstance(node, CriteriaGraph.Output):
-                type_label = "output"
-            else:
-                raise Exception("Cannot find style for this kind of node.")
-            return type_label
-
-        def get_node_style(self, node):
-            if isinstance(node, CriteriaGraph.Evaluation):
-                style = evaluation_style
-            elif isinstance(node, CriteriaGraph.Criterion):
-                style = criterion_style
-            elif isinstance(node, CriteriaGraph.Output):
-                style = output_style
-            else:
-                raise Exception("Cannot find style for this kind of node.")
-            return style
-
-        def mermaid(self, special_nodes=None):
-            if special_nodes is None:
-                special_nodes = []
-            nodes = [self.label+self.identifier+('"'+self.summary+'"').join(starting_evaluation_style)]
-            edges = [self.label+self.identifier+" --> "+child.label+child.identifier for child in self.outgoing]
-            stack = list(self.outgoing)
-            while len(stack) > 0:
-                child = stack.pop()
-                if child.label in special_nodes:
-                    style = special_style
-                else:
-                    style = child.style
-                nodes.append(child.label+child.identifier+('"'+child.summary+'"').join(style))
-                edges += [child.label+child.identifier+" --> "+next_child.label+next_child.identifier for next_child in child.outgoing]
-                stack += child.outgoing
-            output = ["graph TD"]+nodes+edges
-            return "\n\t".join(output)
-
-        def as_dictionary(self):
-            tree_dict = {
-                "label": self.label,
-                "summary": self.summary,
-                "details": self.details,
-                "type": self.type_label,
-                "children": [node.as_dictionary() for node in self.outgoing]
-            }
-            return tree_dict
-
-        def json(self):
-            return str(json.dumps(self.as_dictionary()))
-
-    def __init__(self, identifier, entry_evaluations=None):
+    def __init__(self, identifier: str) -> None:
         self.identifier = identifier
-        self.evaluations = {}
-        self.criteria = {}
-        self.outputs = {}
-        self.sufficiencies = {}
-        self.entry_evaluations = entry_evaluations
-        return
+        self.evaluations: dict[str, EvaluationNode] = {}
+        self.criteria: dict[str, CriterionNode] = {}
+        self.outputs: dict[str, OutputNode] = {}
+        # Evaluation label -> criteria whose evaluations can stand in for it
+        # when choosing where to start (see starting_evaluations).
+        self.sufficiencies: dict[str, list[str] | None] = {}
 
-    def json(self):
-        graph = {
-            "evaluations": {
-                label: {
-                    "summary": node.summary,
-                    "details": node.details,
-                    "incoming": [n.source.label for n in node.incoming],
-                    "outgoing": [n.target.label for n in node.outgoing]
-                } for (label, node) in self.evaluations.items()
-            },
-            "criteria": {
-                label: {
-                    "summary": node.summary,
-                    "details": node.details,
-                    "incoming": [n.source.label for n in node.incoming],
-                    "outgoing": [n.target.label for n in node.outgoing]
-                } for (label, node) in self.criteria.items()
-            },
-            "outputs": {
-                label: {
-                    "summary": node.summary,
-                    "details": node.details,
-                    "incoming": [n.source.label for n in node.incoming]
-                } for (label, node) in self.outputs.items()
-            },
-            "sufficiencies": {label: list(suffs) for (label, suffs) in self.sufficiencies.items() if suffs is not None},
-        }
-        return str(json.dumps(graph))
+    # ------------------------------------------------------------------
+    # Building
+    # ------------------------------------------------------------------
 
-    def mermaid(self):
-        output = ["flowchart TD"]
-        linebreak = '<br/>---<br/>'
-        # Ordered de-duplication (dicts), so the output doesn't depend on the hash seed.
-        edges = {}
-        sufficiencies = {}
-        node_sets = [self.evaluations, self.criteria, self.outputs]
-        node_styles = [evaluation_style, criterion_style, output_style]
-        node_keys = {}
-        for set_index, nodes in enumerate(node_sets):
-            index = 0
-            for (label, node) in nodes.items():
-                node_keys.update({label: "N_"+str(set_index)+"_"+str(index)})
-                index += 1
-        for set_index, nodes in enumerate(node_sets):
-            style = node_styles[set_index]
-            for (label, node) in nodes.items():
-                output.append(node_keys[label]+style[0]+'"'+label+linebreak+node.details+'"'+style[1])
-                edges.update(dict.fromkeys((node_keys[edge.source.label], node_keys[edge.target.label]) for edge in node.outgoing+node.incoming))
-                if self.sufficiencies.get(label, None) is not None:
-                    sufficiencies.update(dict.fromkeys((label, sufficiency) for sufficiency in self.sufficiencies.get(label, None)))
-        for edge in edges:
-            output.append(" --> ".join(edge))
-        for sufficiency in sufficiencies:
-            output.append(" -.-> ".join(sufficiency))
-        return "\n\t".join(output)
-
-    def add_evaluation_node(self, label, summary, details, sufficiencies=None, evaluate=None, feedback_string_generator=None):
+    def add_evaluation_node(
+        self,
+        label: str,
+        summary: str,
+        details: str,
+        sufficiencies: Iterable[str] | None = None,
+        evaluate: Evaluate | None = None,
+        feedback_string_generator: FeedbackStringGenerator | None = None,
+    ) -> EvaluationNode:
+        # feedback_string_generator is accepted (and rejected) so that attach()
+        # can pass the same keywords whichever kind of node it creates.
         if feedback_string_generator is not None:
-            raise Exception(f"{label} is an evaluation node, evaluation nodes cannot generate feedback strings.")
-        if label in self.evaluations.keys():
-            raise Exception(f"Evaluation node {label} is already defined.")
-        else:
-            node = CriteriaGraph.Evaluation(label, summary, details, evaluate)
-            self.evaluations.update({label: node})
-            self.sufficiencies.update({label: sufficiencies})
+            raise CriteriaGraphError(
+                f"{label} is an evaluation node, evaluation nodes cannot generate feedback strings."
+            )
+        if label in self.evaluations:
+            raise CriteriaGraphError(f"Evaluation node {label} is already defined.")
+        node = EvaluationNode(label, summary, details, evaluate)
+        self.evaluations[label] = node
+        self.sufficiencies[label] = list(sufficiencies) if sufficiencies is not None else None
         return node
 
-    def add_criterion_node(self, label, summary, details, sufficiencies=None, evaluate=None, feedback_string_generator=None):
-        if label in self.criteria.keys():
-            raise Exception(f"Criterion node {label} is already defined.")
+    def add_criterion_node(
+        self,
+        label: str,
+        summary: str,
+        details: str,
+        sufficiencies: Iterable[str] | None = None,
+        evaluate: Evaluate | None = None,
+        feedback_string_generator: FeedbackStringGenerator | None = None,
+    ) -> CriterionNode:
+        # sufficiencies/evaluate are accepted for attach(), as above; criteria
+        # cannot have sufficiencies, and `evaluate` is ignored.
+        if label in self.criteria:
+            raise CriteriaGraphError(f"Criterion node {label} is already defined.")
         if sufficiencies is not None:
-            raise Exception("Criterion nodes cannot have sufficiencies.")
-        node = CriteriaGraph.Criterion(label, summary=summary, details=details, feedback_string_generator=feedback_string_generator)
-        self.criteria.update({label: node})
-        self.sufficiencies.update({label: sufficiencies})
+            raise CriteriaGraphError("Criterion nodes cannot have sufficiencies.")
+        node = CriterionNode(label, summary, details, feedback_string_generator or no_feedback)
+        self.criteria[label] = node
+        self.sufficiencies[label] = None
         return node
 
-    def add_output_node(self, label, summary, details):
-        if label in self.outputs.keys():
-            raise Exception(f"Output node {label} is already defined.")
-        else:
-            node = CriteriaGraph.Output(label, summary, details)
-            self.outputs.update({label: node})
+    def add_output_node(self, label: str, summary: str, details: str) -> OutputNode:
+        if label in self.outputs:
+            raise CriteriaGraphError(f"Output node {label} is already defined.")
+        node = OutputNode(label, summary, details)
+        self.outputs[label] = node
         return node
 
-    def add_node(self, node):
-        if isinstance(node, CriteriaGraph.Evaluation):
+    def add_node(self, node: Node) -> None:
+        """Add a copy of ``node`` (e.g. ``CriteriaGraph.END``) to this graph."""
+        if isinstance(node, EvaluationNode):
             self.add_evaluation_node(node.label, node.summary, node.details, evaluate=node.evaluate)
-        elif isinstance(node, CriteriaGraph.Criterion):
-            self.add_criterion_node(node.label, node.summary, node.details, feedback_string_generator=node.feedback_string_generator)
-        elif isinstance(node, CriteriaGraph.Output):
+        elif isinstance(node, CriterionNode):
+            self.add_criterion_node(
+                node.label, node.summary, node.details, feedback_string_generator=node.feedback_string_generator
+            )
+        elif isinstance(node, OutputNode):
             self.add_output_node(node.label, node.summary, node.details)
         else:
-            raise Exception("Can only add evaluation, criterion or output nodes to criteria graph.")
+            raise CriteriaGraphError("Can only add evaluation, criterion or output nodes to criteria graph.")
 
-    def attach(self, source_label, target_label, summary=None, details=None, sufficiencies=None, evaluate=None, feedback_string_generator=None):
-        source = self.evaluations.get(source_label, None)
-        if source is None:
-            source = self.criteria.get(source_label, None)
-        if source is None:
-            raise Exception(f"Unknown node {source_label}.")
+    def attach(
+        self,
+        source_label: str,
+        target_label: str,
+        summary: str | None = None,
+        details: str | None = None,
+        sufficiencies: Iterable[str] | None = None,
+        evaluate: Evaluate | None = None,
+        feedback_string_generator: FeedbackStringGenerator | None = None,
+    ) -> None:
+        """Add an edge from ``source_label`` to ``target_label``.
 
-        if isinstance(source, CriteriaGraph.Evaluation):
-            target_set = self.criteria
-            target_generator = self.add_criterion_node
-            target_alternative_set = {}
-            target_wrong_type_set = self.evaluations
-            type_name = "evaluation"
-            other_type_name = "criterion"
-        elif isinstance(source, CriteriaGraph.Criterion):
-            target_set = self.evaluations
-            target_generator = self.add_evaluation_node
-            target_alternative_set = self.outputs
-            target_wrong_type_set = self.criteria
-            type_name = "criterion"
-            other_type_name = "evaluation"
-        elif isinstance(source, CriteriaGraph.Output):
-            raise Exception(f"{source_label} is an output nodes. Output nodes cannot have outgoing edges.")
+        Evaluations attach to criteria, criteria to evaluations or outputs. If
+        the target doesn't exist it is created (of the kind the source leads
+        to), which requires ``summary`` and ``details``; the remaining keywords
+        configure the new node.
+        """
+        source: Node | None = self.evaluations.get(source_label) or self.criteria.get(source_label)
+        if source is None:
+            if source_label in self.outputs:
+                raise CriteriaGraphError(f"{source_label} is an output node. Output nodes cannot have outgoing edges.")
+            raise CriteriaGraphError(f"Unknown node {source_label}.")
+
+        target: Node | None
+        wrong_kind: Mapping[str, Node]
+        if isinstance(source, EvaluationNode):
+            target, wrong_kind = self.criteria.get(target_label), self.evaluations
+            kind, other_kind = "evaluation", "criterion"
         else:
-            raise Exception(f"Source node {source_label} is an invalid type.")
+            target = self.evaluations.get(target_label) or self.outputs.get(target_label)
+            wrong_kind, kind, other_kind = self.criteria, "criterion", "evaluation"
 
-        target = target_set.get(target_label, None)
         if target is None:
-            target = target_alternative_set.get(target_label, None)
-            if target is None:
-                target = target_wrong_type_set.get(target_label, None)
-                if target is None:
-                    if summary is None or details is None:
-                        raise Exception(f"Unknown node {target_label}. If you wish to create a new node summary and details must be specified.")
-                    else:
-                        target = target_generator(target_label, summary=summary, details=details, sufficiencies=sufficiencies, evaluate=evaluate, feedback_string_generator=feedback_string_generator)
-                else:
-                    raise Exception(f"Both {source_label} and {target_label} are {type_name} nodes. Only {other_type_name} nodes can be attached to {type_name} nodes.")
+            if target_label in wrong_kind:
+                raise CriteriaGraphError(
+                    f"Both {source_label} and {target_label} are {kind} nodes. "
+                    f"Only {other_kind} nodes can be attached to {kind} nodes."
+                )
+            if summary is None or details is None:
+                raise CriteriaGraphError(
+                    f"Unknown node {target_label}. If you wish to create a new node summary and details must be "
+                    "specified."
+                )
+            add = self.add_criterion_node if isinstance(source, EvaluationNode) else self.add_evaluation_node
+            target = add(
+                target_label,
+                summary,
+                details,
+                sufficiencies=sufficiencies,
+                evaluate=evaluate,
+                feedback_string_generator=feedback_string_generator,
+            )
 
-        edge = CriteriaGraph.Edge(source, target)
+        edge = Edge(source, target)
         if edge in source.outgoing:
-            raise Exception(f"{target_label} is already attached to {source_label}.")
-        else:
-            source.outgoing.append(edge)
-            target.incoming.append(edge)
-        return
+            raise CriteriaGraphError(f"{target_label} is already attached to {source_label}.")
+        source.outgoing.append(edge)
+        target.incoming.append(edge)
 
-    def add_sufficiencies(self, source_label, sufficiencies):
-        if source_label in self.evaluations.keys():
-            if self.sufficiencies.get(source_label, None) is None:
-                self.sufficiencies.update({source_label: []})
-            for sufficiency in sufficiencies:
-                if sufficiency not in self.sufficiencies[source_label]:
-                    self.sufficiencies[source_label].append(sufficiency)
-        else:
-            raise Exception(f"Unknown evaluation node {source_label}. Only evaluation nodes can have sufficiencies.")
-        return
+    def add_sufficiencies(self, source_label: str, sufficiencies: Iterable[str]) -> None:
+        if source_label not in self.evaluations:
+            raise CriteriaGraphError(
+                f"Unknown evaluation node {source_label}. Only evaluation nodes can have sufficiencies."
+            )
+        existing = self.sufficiencies.get(source_label)
+        if existing is None:
+            existing = self.sufficiencies[source_label] = []
+        for sufficiency in sufficiencies:
+            if sufficiency not in existing:
+                existing.append(sufficiency)
 
-    def starting_evaluations(self, label):
+    # ------------------------------------------------------------------
+    # Querying
+    # ------------------------------------------------------------------
+
+    def starting_evaluations(self, label: str) -> list[str]:
+        """The evaluations to start from to decide criterion (or evaluation) ``label``.
+
+        Evaluations with sufficiencies are replaced by the evaluations leading
+        to those sufficient criteria, recursively.
+        """
         # TODO: Consider if starting evaluations should only accept evaluation nodes
         #       instead of guessing the intent when using criteria nodes as targets
-        # Ordered worklists (not sets): the result and the order of evaluation
-        # must not depend on the hash seed.
-        if label in self.criteria.keys():
-            main_criteria = self.criteria[label]
-            base_starting_evaluations = list(dict.fromkeys(edge.source.label for edge in main_criteria.incoming))
-        elif label in self.evaluations.keys():
-            base_starting_evaluations = [label]
+        if label in self.criteria:
+            base = list(dict.fromkeys(edge.source.label for edge in self.criteria[label].incoming))
+        elif label in self.evaluations:
+            base = [label]
         else:
-            raise Exception(f"No criterion or evaluation with label {label}.")
-        starting_evaluations = []
-        candidates = list(base_starting_evaluations)
-        seen = set()
+            raise CriteriaGraphError(f"No criterion or evaluation with label {label}.")
+        # Ordered worklist (not a set): the result must not depend on the hash seed.
+        starting: list[str] = []
+        candidates = list(base)
+        seen: set[str] = set()
         while candidates:
-            label = candidates.pop(0)
-            if label in seen:
+            candidate = candidates.pop(0)
+            if candidate in seen:
                 continue  # sufficiencies can form cycles
-            seen.add(label)
-            if self.sufficiencies.get(label, None) is None:
-                starting_evaluations.append(label)
+            seen.add(candidate)
+            sufficiencies = self.sufficiencies.get(candidate)
+            if sufficiencies is None:
+                starting.append(candidate)
             else:
-                for sufficiency in self.sufficiencies.get(label, []):
+                for sufficiency in sufficiencies:
                     candidates += [edge.source.label for edge in self.criteria[sufficiency].incoming]
-        if len(starting_evaluations) == 0:
-            starting_evaluations = base_starting_evaluations
-        return starting_evaluations
+        return starting or base
 
-    def build_tree(self, starting_evaluation, return_node=RETURN, main_criteria=None):
-        node = self.evaluations.get(starting_evaluation, None)
-        if node is None:
-            raise ValueError(f"Unknown evaluation node {starting_evaluation}.")
-        identifier = 0
-        root_node = CriteriaGraph.Tree(node, identifier=identifier, main_criteria=main_criteria)
-        stack = [(edge.target, root_node) for (k, edge) in enumerate(node.outgoing)]
-        visited_nodes = [node.label]
-        while len(stack) > 0:
-            node, parent = stack.pop()
-            if node.label in visited_nodes:
-                parent.outgoing.append(CriteriaGraph.Tree(CriteriaGraph.Output("RETURN"+str(identifier), "Go to: "+node.label, "Reached a previously visited node."), parent=parent, identifier=identifier, main_criteria=main_criteria))
-            else:
-                tree_node = CriteriaGraph.Tree(node, parent=parent, identifier=identifier, main_criteria=main_criteria)
-                parent.outgoing.append(tree_node)
-                if not isinstance(node, CriteriaGraph.Output):
-                    visited_nodes.append(node.label)
-                stack += [(edge.target, tree_node) for (k, edge) in enumerate(node.outgoing)]
-            identifier += 1
-        return root_node
+    def build_tree(self, starting_evaluation: str, main_criteria: Collection[str] = ()) -> CriteriaTree:
+        """The graph unrolled from ``starting_evaluation`` as a tree (for display)."""
+        return build_tree(self, starting_evaluation, main_criteria)
 
-    def trees(self, label):
-        trees = [self.build_tree(start, main_criteria=[label]) for start in self.starting_evaluations(label)]
-        return trees
+    def trees(self, label: str) -> list[CriteriaTree]:
+        """One tree per starting evaluation for criterion ``label``."""
+        return [self.build_tree(start, main_criteria=[label]) for start in self.starting_evaluations(label)]
 
-    def generate_feedback(self, response, main_criteria):
-        evaluations = list(self.starting_evaluations(main_criteria))
-        visited_evaluations = set()
-        feedback = dict()
-        while len(evaluations) > 0:
-            e = evaluations.pop(0)
-            if e in self.evaluations.keys() and self.evaluations[e].replacement is not None:
-                visited_evaluations.update({e})
-                e = self.evaluations[e].replacement.label
-            if e not in visited_evaluations and e in self.evaluations.keys():
-                visited_evaluations.update({e})
-                try:
-                    results = self.evaluations[e].evaluate(response)
-                except Exception as exc:
-                    raise CriteriaEvaluationError(e) from exc
-                feedback.update(results)
-                for criterion in results.keys():
-                    evaluations += [edge.target.label for edge in self.criteria[criterion].outgoing]
+    def generate_feedback(self, response: Any, main_criteria: str) -> dict[str, Mapping[str, Any] | None]:
+        """Run the evaluations reachable from ``main_criteria``'s starting evaluations.
+
+        Returns every criterion reached, mapped to the inputs for its feedback
+        text, in the order reached (breadth-first, in attachment order).
+        Evaluations with a ``replacement`` are skipped in favour of it.
+        """
+        queue = self.starting_evaluations(main_criteria)
+        visited: set[str] = set()
+        feedback: dict[str, Mapping[str, Any] | None] = {}
+        while queue:
+            label = queue.pop(0)
+            node = self.evaluations.get(label)
+            if node is not None and node.replacement is not None:
+                visited.add(label)
+                label = node.replacement.label
+            if label in visited or label not in self.evaluations:
+                continue
+            visited.add(label)
+            evaluate = self.evaluations[label].evaluate
+            if evaluate is None:
+                raise CriteriaGraphError(f"Evaluation node {label} has no evaluate function.")
+            try:
+                results = evaluate(response)
+            except Exception as exc:
+                raise CriteriaEvaluationError(label) from exc
+            feedback.update(results)
+            for criterion in results:
+                queue += [edge.target.label for edge in self.criteria[criterion].outgoing]
         return feedback
+
+    # ------------------------------------------------------------------
+    # Rendering
+    # ------------------------------------------------------------------
+
+    def to_json(self) -> str:
+        """The graph's nodes, edges and sufficiencies as a JSON string."""
+        return graph_to_json(self)
+
+    def to_mermaid(self) -> str:
+        """Mermaid flowchart source for the graph."""
+        return graph_to_mermaid(self)

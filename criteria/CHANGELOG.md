@@ -4,6 +4,28 @@
 
 The first release after the extraction refactor. The import path is now `compareexpressions.criteria` (was `criteria`).
 
+### Renamed and restructured
+
+| v0.1 | 0.2.0 |
+|---|---|
+| `criteria` (import) | `compareexpressions.criteria` |
+| `generate_criteria_parser(reserved, token_list=, productions=)` | `build_criteria_parser(reserved, token_list=, productions=)`; the defaults are the tuples `grammar.TOKENS` / `grammar.PRODUCTIONS` |
+| `criteria.parsing.base_token_list` / `base_productions` | `criteria.grammar.TOKENS` / `PRODUCTIONS` |
+| `CriteriaGraph.Evaluation` / `.Criterion` / `.Output` / `.Edge` / `.Node` | `EvaluationNode` / `CriterionNode` / `OutputNode` / `Edge` / `Node` (module-level dataclasses) |
+| `CriteriaGraph.Tree` | `CriteriaTree`, with `children` / `parent` instead of `outgoing` / `incoming` |
+| `graph.json()` / `graph.mermaid()` | `graph.to_json()` / `graph.to_mermaid()` |
+| `tree.json()` / `tree.mermaid(special_nodes)` / `tree.as_dictionary()` | `tree.to_json()` / `tree.to_mermaid(special_nodes)` / `tree.as_dict()` |
+| `graph.build_tree(start, return_node=..., main_criteria=None)` | `graph.build_tree(start, main_criteria=())` |
+| `graph.starting_evaluations(label)` returned a `set` | returns an ordered `list` |
+
+`CriteriaGraph.END`, the graph-building methods (`add_evaluation_node`, `add_criterion_node`, `add_output_node`, `add_node`, `attach`, `add_sufficiencies`), `generate_feedback`, `trees`, and node attributes (`label`, `summary`, `details`, `incoming`, `outgoing`, `evaluate`, `replacement`, `feedback_string_generator`) keep their names.
+
+Removed (unused): `CriteriaGraph(identifier, entry_evaluations=)` (never read), `CriteriaGraph.RETURN`, the `Evaluation.results` / `Criterion.consequences` aliases of `outgoing`, and the node `tags` attributes.
+
+Errors: graph misuse raises `CriteriaGraphError` (a `ValueError`) instead of bare `Exception`; `CriteriaError` is the common base.
+
+Modules: `grammar` (was `parsing`), `nodes`, `graph`, `tree`, `render`, `feedback`, `errors`. Fully type-annotated (`py.typed`).
+
 ### Replaces `compareexpressions-evaluation-result`
 
 The `evaluation_result` package is retired. Use `lf_toolkit.evaluation.Result` from [toolkit-python](https://github.com/lambda-feedback/toolkit-python) together with the new `compareexpressions.criteria.feedback` helpers. These type against a `ResultLike` protocol (`tags` + `add_feedback(tag, text)`), so this package doesn't depend on lf_toolkit.
@@ -27,9 +49,9 @@ Behaviour differences to be aware of when adopting:
 
 ### Fixed
 
-- Rendering a `CriteriaGraph.Tree` to mermaid no longer empties the tree. The renderer used the root's own `outgoing` list as its work stack.
-- `generate_criteria_parser` no longer extends the module-level default token list, so reserved words from one parser no longer leak into every later parser.
-- `build_tree` on an unknown label raises a `ValueError` naming the label. It used to raise `AttributeError` from formatting the message with the missing node.
+- Rendering a tree to mermaid no longer empties the tree. The renderer used the root's own `outgoing` list as its work stack.
+- The criteria parser builder no longer extends the module-level default token list, so reserved words from one parser no longer leak into every later parser.
+- `build_tree` on an unknown label raises a `CriteriaGraphError` (a `ValueError`) naming the label. It used to raise `AttributeError` from formatting the message with the missing node.
 - `add_node` works for evaluation nodes (it read a nonexistent `sufficiencies` attribute) and keeps the node's `evaluate` function and a criterion's `feedback_string_generator` (both were dropped).
 - Graph nodes are hashable and compare unequal to non-nodes, instead of raising `AttributeError`.
 - **Deterministic results.** `generate_feedback` ran evaluations (and so ordered the returned criteria), and `CriteriaGraph.mermaid()` ordered its edge lines, by set iteration, which varies with Python's hash seed. Both now follow graph order: evaluations breadth-first in attachment order. `starting_evaluations` returns an ordered, de-duplicated **list** (was a set).

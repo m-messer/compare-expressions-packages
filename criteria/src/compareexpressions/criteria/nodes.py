@@ -1,0 +1,82 @@
+"""Nodes and edges of a criteria graph.
+
+A criteria graph alternates between *evaluation* nodes, which run a check and
+report which criteria hold, and *criterion* nodes, which record an outcome
+and lead to further evaluations or to *output* nodes.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
+from typing import Any, TypeAlias
+
+Evaluate: TypeAlias = Callable[[Any], Mapping[str, Mapping[str, Any] | None]]
+"""``evaluate(response) -> {criterion_label: feedback_inputs_or_None}`` for the criteria that hold."""
+
+FeedbackStringGenerator: TypeAlias = Callable[[Mapping[str, Any]], str | None]
+"""Renders a criterion's feedback text from the inputs its evaluation reported."""
+
+
+def no_feedback(inputs: Mapping[str, Any]) -> None:
+    """Default feedback generator: the criterion has nothing to say."""
+    return None
+
+
+@dataclass(eq=False)
+class Node:
+    """A graph node. Nodes compare (and hash) by label, summary and details."""
+
+    label: str
+    summary: str
+    details: str
+    incoming: list[Edge] = field(default_factory=list, init=False, repr=False)
+    outgoing: list[Edge] = field(default_factory=list, init=False, repr=False)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Node):
+            return NotImplemented
+        return (self.label, self.summary, self.details) == (other.label, other.summary, other.details)
+
+    def __hash__(self) -> int:
+        return hash((self.label, self.summary, self.details))
+
+
+@dataclass(eq=False)
+class EvaluationNode(Node):
+    """Runs ``evaluate`` on the response; the criteria it reports lead onwards.
+
+    Setting ``replacement`` (e.g. to ``CriteriaGraph.END``) disables the
+    evaluation: feedback generation goes to the replacement instead.
+    """
+
+    evaluate: Evaluate | None = None
+    replacement: Node | None = None
+
+
+@dataclass(eq=False)
+class CriterionNode(Node):
+    """An outcome of an evaluation, with the generator for its feedback text."""
+
+    feedback_string_generator: FeedbackStringGenerator = no_feedback
+
+
+@dataclass(eq=False)
+class OutputNode(Node):
+    """A terminal node; output nodes have no outgoing edges."""
+
+
+@dataclass(frozen=True, eq=False)
+class Edge:
+    """A directed edge. Edges compare (and hash) by their endpoints' labels."""
+
+    source: Node
+    target: Node
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Edge):
+            return NotImplemented
+        return (self.source.label, self.target.label) == (other.source.label, other.target.label)
+
+    def __hash__(self) -> int:
+        return hash((self.source.label, self.target.label))

@@ -6,9 +6,13 @@ import sys
 
 import pytest
 
-from compareexpressions.criteria import CriteriaGraph, generate_criteria_parser
-from compareexpressions.criteria import parsing as criteria_parsing
-from compareexpressions.criteria.errors import CriteriaEvaluationError
+from compareexpressions.criteria import (
+    CriteriaEvaluationError,
+    CriteriaGraph,
+    CriterionNode,
+    EvaluationNode,
+    build_criteria_parser,
+)
 
 
 def small_graph():
@@ -23,18 +27,16 @@ def small_graph():
 class TestTreeRendering:
     def test_mermaid_does_not_consume_the_tree(self):
         tree = small_graph().build_tree("E1")
-        first = tree.mermaid()
-        assert len(tree.outgoing) == 1
-        assert tree.mermaid() == first
+        first = tree.to_mermaid()
+        assert len(tree.children) == 1
+        assert tree.to_mermaid() == first
         assert "C1" in first and "OUT" in first
 
 
 class TestCriteriaParser:
     def test_reserved_words_do_not_leak_between_parsers(self):
-        before = len(criteria_parsing.base_token_list)
-        generate_criteria_parser({"learner": {"response": None}})
-        parser = generate_criteria_parser({"task": {"answer": None}})
-        assert len(criteria_parsing.base_token_list) == before
+        build_criteria_parser({"learner": {"response": None}})
+        parser = build_criteria_parser({"task": {"answer": None}})
         labels = [token.label for token in parser.scan("response = answer")]
         assert labels == ["OTHER", "EQUALITY", "RESERVED"]
 
@@ -52,8 +54,8 @@ class TestGraph:
             return "text"
 
         graph = CriteriaGraph("g")
-        graph.add_node(CriteriaGraph.Evaluation("E", "eval", "details", evaluate))
-        graph.add_node(CriteriaGraph.Criterion("C", "crit", "details", feedback_string_generator=feedback))
+        graph.add_node(EvaluationNode("E", "eval", "details", evaluate))
+        graph.add_node(CriterionNode("C", "crit", "details", feedback_string_generator=feedback))
         assert graph.evaluations["E"].evaluate is evaluate
         assert graph.criteria["C"].feedback_string_generator is feedback
 
@@ -84,7 +86,7 @@ for c in "ABC":
     g.attach(c, "E" + c, summary=c, details=c, evaluate=(lambda c: lambda r: {c + "_OK": None})(c))
     g.attach("E" + c, c + "_OK", summary=c, details=c)
 print(list(g.generate_feedback("r", "START")))
-print(g.mermaid())
+print(g.to_mermaid())
 """
 
 

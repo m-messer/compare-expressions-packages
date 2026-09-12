@@ -69,12 +69,7 @@ compareExpressions records many tags whose feedback is intentionally blank (its 
 ```python
 @property
 def feedback(self) -> str:
-    return "<br>".join(
-        text.strip()
-        for texts in self._feedback.values()
-        for text in texts
-        if text and text.strip()
-    )
+    return "<br>".join(text.strip() for texts in self._feedback.values() for text in texts if text and text.strip())
 ```
 
 The `criteria.feedback.add_feedback_from_tags` helper already adds blank feedback as `""`, so once this lands the adopted output matches `EvaluationResult`'s.

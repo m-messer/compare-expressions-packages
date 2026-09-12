@@ -4,11 +4,11 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "compareexpressions-criteria"
-version = "0.1.0"
+version = "0.2.0"
 description = "Criteria DSL parser and evaluation graph extracted from compareExpressions."
 requires-python = ">=3.11"
 dependencies = [
-    "compareexpressions-slr-parsing (>=0.1.0,<0.3.0)",
+    "compareexpressions-slr-parsing (>=0.2.0,<0.3.0)",
 ]
 
 [tool.poetry]
