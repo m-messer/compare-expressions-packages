@@ -24,14 +24,12 @@ def parsing_params(**overrides):
 
 
 class TestSymbolAssumptions:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: symbol_assumptions are passed to eval()")
     def test_assumption_tuples_are_not_executed(self):
         injected = "(__import__('sys').modules.__setitem__('pwned_by_assumptions', 1), 'positive')"
         with pytest.raises(ValueError):
             parsing_params(symbol_assumptions=injected)
         assert "pwned_by_assumptions" not in sys.modules
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: assumption names are pasted into eval()")
     def test_assumption_names_must_be_identifiers(self):
         with pytest.raises(ValueError, match="positive=True"):
             parsing_params(symbol_assumptions="('x', 'positive=True')")

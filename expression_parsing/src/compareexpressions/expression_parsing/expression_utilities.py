@@ -28,9 +28,11 @@ from sympy.parsing.sympy_parser import T as parser_transformations
 from sympy.printing.latex import LatexPrinter
 from sympy import Basic, Symbol, Equality, Function
 
+import ast
 import re
 from typing import Dict, List, TypedDict
 
+from .errors import SymbolAssumptionError
 from .feedback import FeedbackTag
 
 
@@ -684,6 +686,31 @@ def sympy_to_latex(equation, symbols, settings=None):
     return latex_out
 
 
+def parse_symbol_assumptions(text):
+    """Parse ``"('a','positive') ('f','function')"`` into ``[('a', 'positive'), ('f', 'function')]``.
+
+    Each parenthesised group must be a pair of string literals; nothing is
+    evaluated as code.
+    """
+    assumptions = []
+    index = text.find("(")
+    while index > -1:
+        index_match = find_matching_parenthesis(text, index)
+        if index_match < 0:
+            raise SymbolAssumptionError("List of symbol assumptions not written correctly.")
+        try:
+            value = ast.literal_eval(text[index+1:index_match])
+        except (ValueError, SyntaxError, TypeError, MemoryError, RecursionError) as e:
+            raise SymbolAssumptionError("List of symbol assumptions not written correctly.") from e
+        if not (isinstance(value, tuple) and len(value) == 2 and all(isinstance(v, str) for v in value)):
+            raise SymbolAssumptionError(
+                f"Symbol assumption {text[index:index_match+1]} must be a pair of strings, e.g. ('x', 'positive')."
+            )
+        assumptions.append(value)
+        index = text.find("(", index_match+1)
+    return assumptions
+
+
 def create_sympy_parsing_params(params, unsplittable_symbols=tuple(), symbol_assumptions=tuple()):
     '''
     Input:
@@ -756,26 +783,21 @@ def create_sympy_parsing_params(params, unsplittable_symbols=tuple(), symbol_ass
 
     symbol_assumptions = list(symbol_assumptions)
     if "symbol_assumptions" in params.keys():
-        symbol_assumptions_strings = params["symbol_assumptions"]
-        index = symbol_assumptions_strings.find("(")
-        while index > -1:
-            index_match = find_matching_parenthesis(symbol_assumptions_strings, index)
-            try:
-                symbol_assumption = eval(symbol_assumptions_strings[index+1:index_match])
-                symbol_assumptions.append(symbol_assumption)
-            except (SyntaxError, TypeError) as e:
-                raise Exception("List of symbol assumptions not written correctly.") from e
-            index = symbol_assumptions_strings.find('(', index_match+1)
+        symbol_assumptions += parse_symbol_assumptions(params["symbol_assumptions"])
     for symbol, assumption in symbol_assumptions:
+        # Assumptions become keyword arguments of Symbol; SymPy stores any
+        # identifier (unknown ones are simply never used).
+        if not assumption.isidentifier():
+            raise SymbolAssumptionError(f"Assumption {assumption} for symbol {symbol} is not a valid assumption name.")
         try:
             if assumption.lower() == "constant":
                 parsing_params["constants"] = parsing_params["constants"].union({symbol})
             if assumption.lower() == "function":
-                parsing_params["symbol_dict"].update({symbol: eval("Function('"+symbol+"')")})
+                parsing_params["symbol_dict"].update({symbol: Function(symbol)})
             else:
-                parsing_params["symbol_dict"].update({symbol: eval("Symbol('"+symbol+"',"+assumption+"=True)")})
+                parsing_params["symbol_dict"].update({symbol: Symbol(symbol, **{assumption: True})})
         except Exception as e:
-            raise Exception(f"Assumption {assumption} for symbol {symbol} caused a problem.") from e
+            raise SymbolAssumptionError(f"Assumption {assumption} for symbol {symbol} caused a problem.") from e
 
 
     return parsing_params
