@@ -65,18 +65,15 @@ class TestParsing:
 
 
 class TestInputSymbols:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: a second call overwrites a user-defined lambda symbol")
     def test_user_defined_lambda_survives_repeated_substitution(self):
         params = {"symbols": {"lambda": {"latex": r"\Lambda_0", "aliases": ["lam"]}}}
         assert substitute_input_symbols(["lam"], params) == ["lamda"]
         assert substitute_input_symbols(["lam"], params) == ["lamda"]
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: removing empty aliases shifts indices and drops real ones")
     def test_empty_aliases_do_not_remove_real_ones(self):
         params = {"symbols": {"x": {"latex": "x", "aliases": ["", "", "xx"]}}}
         assert substitute_input_symbols(["xx"], params) == ["x"]
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: aliases are never stripped (the .strip() result is discarded)")
     def test_aliases_are_stripped(self):
         params = {"symbols": {"x": {"latex": "x", "aliases": [" xx "]}}}
         assert substitute_input_symbols(["xx"], params) == ["x"]

@@ -189,6 +189,27 @@
   "reason": "expression_parsing: arithmetic on {} set literals (strict syntax) is rejected instead of building a deprecated Mul(FiniteSet, ...)",
   "value": "ERROR"
  },
+ "expr.preview|symbols|lam + lambda": {
+  "reason": "expression_parsing: a user-defined lambda symbol keeps its LaTeX (it was overwritten by the default \\lambda on the second internal substitution pass)",
+  "value": {
+   "latex": "\\Lambda_0 + \\Lambda_0",
+   "sympy": "lamda + lamda"
+  }
+ },
+ "expr.preview|symbols|lambda x": {
+  "reason": "expression_parsing: a user-defined lambda symbol keeps its LaTeX (it was overwritten by the default \\lambda on the second internal substitution pass)",
+  "value": {
+   "latex": "\\Lambda_0 \\cdot x",
+   "sympy": "lamda x"
+  }
+ },
+ "expr.preview|symbols|λ": {
+  "reason": "expression_parsing: a user-defined lambda symbol keeps its LaTeX (it was overwritten by the default \\lambda on the second internal substitution pass)",
+  "value": {
+   "latex": "\\Lambda_0",
+   "sympy": "lamda"
+  }
+ },
  "quantity.parse|legacy|(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)": {
   "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
   "value": {

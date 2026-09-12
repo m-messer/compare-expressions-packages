@@ -399,32 +399,21 @@ def substitute_input_symbols(exprs, params):
         substitutions += alias_substitutions
 
     if "symbols" in params.keys():
-        # Removing invalid input symbols
-        input_symbols_to_remove = []
-        aliases_to_remove = []
-        for (code, symbol_data) in input_symbols.items():
-            if len(code) == 0:
-                input_symbols_to_remove += [code]
-            else:
-                if len(code.strip()) == 0:
-                    input_symbols_to_remove += [code]
-                else:
-                    aliases = symbol_data["aliases"]
-                    for i in range(0, len(aliases)):
-                        if len(aliases[i]) > 0:
-                            aliases[i].strip()
-                        if len(aliases[i]) == 0:
-                            aliases_to_remove += [(code, i)]
-        for (code, i) in aliases_to_remove:
-            del input_symbols[code]["aliases"][i]
-        for code in input_symbols_to_remove:
+        # Drop symbols with blank codes; strip aliases and drop blank ones
+        for code in [code for code in input_symbols if not code.strip()]:
             del input_symbols[code]
+        for symbol_data in input_symbols.values():
+            symbol_data["aliases"] = [alias.strip() for alias in symbol_data["aliases"] if alias.strip()]
 
     # Since 'lambda' is a reserved keyword in python
     # it needs to be replaced with 'lamda' for expression
-    # parsing to work properly
-    lambda_value = input_symbols.pop("lambda", {"latex": r"\lambda", "aliases": ["lambda"]})
-    if lambda_value is not None:
+    # parsing to work properly. This must be idempotent: params["symbols"]
+    # is updated below and later calls see the result.
+    if "lambda" in input_symbols:
+        lambda_value = input_symbols.pop("lambda")
+    else:
+        lambda_value = input_symbols.get("lamda", {"latex": r"\lambda", "aliases": []})
+    if "lambda" not in lambda_value["aliases"]:
         lambda_value["aliases"].append("lambda")
     input_symbols.update({"lamda": lambda_value})
     params.update({"symbols": input_symbols})
@@ -438,29 +427,17 @@ def substitute_input_symbols(exprs, params):
     # REMARK: This is to ensure capability with response areas that use the old formatting
     # for input_symbols. Should be removed when all response areas are updated.
     if "input_symbols" in params.keys():
-        input_symbols = params["input_symbols"]
-        input_symbols_to_remove = []
-        alternatives_to_remove = []
-        for k in range(0, len(input_symbols)):
-            if len(input_symbols[k]) > 0:
-                input_symbols[k][0].strip()
-                if len(input_symbols[k][0]) == 0:
-                    input_symbols_to_remove += [k]
-            else:
-                for i in range(0, len(input_symbols[k][1])):
-                    if len(input_symbols[k][1][i]) > 0:
-                        input_symbols[k][1][i].strip()
-                    if len(input_symbols[k][1][i]) == 0:
-                        alternatives_to_remove += [(k, i)]
-        for (k, i) in alternatives_to_remove:
-            del input_symbols[k][1][i]
-        for k in input_symbols_to_remove:
-            del input_symbols[k]
-        for input_symbol in params["input_symbols"]:
-            substitutions.append((input_symbol[0], input_symbol[0]))
-            for alternative in input_symbol[1]:
-                if len(alternative) > 0:
-                    substitutions.append((alternative, input_symbol[0]))
+        # [code, [alternatives]] entries: drop blank codes, strip and drop blank alternatives
+        legacy_symbols = []
+        for entry in params["input_symbols"]:
+            code = entry[0].strip() if entry else ""
+            if code:
+                alternatives = entry[1] if len(entry) > 1 else []
+                legacy_symbols.append([code, [a.strip() for a in alternatives if a.strip()]])
+        params["input_symbols"] = legacy_symbols
+        for code, alternatives in legacy_symbols:
+            substitutions.append((code, code))
+            substitutions += [(alternative, code) for alternative in alternatives]
 
     # Since 'lambda' is a reserved keyword in python
     # we need to make sure it is not substituted back in
