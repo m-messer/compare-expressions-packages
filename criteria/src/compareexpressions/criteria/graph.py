@@ -236,9 +236,9 @@ class CriteriaGraph:
 
     def add_node(self, node):
         if isinstance(node, CriteriaGraph.Evaluation):
-            self.add_evaluation_node(node.label, node.summary, node.details, node.sufficiencies)
+            self.add_evaluation_node(node.label, node.summary, node.details, evaluate=node.evaluate)
         elif isinstance(node, CriteriaGraph.Criterion):
-            self.add_criterion_node(node.label, node.summary, node.details)
+            self.add_criterion_node(node.label, node.summary, node.details, feedback_string_generator=node.feedback_string_generator)
         elif isinstance(node, CriteriaGraph.Output):
             self.add_output_node(node.label, node.summary, node.details)
         else:

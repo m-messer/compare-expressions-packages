@@ -39,14 +39,18 @@ class TestGraph:
         with pytest.raises(ValueError, match="Unknown evaluation node NOPE"):
             small_graph().build_tree("NOPE")
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: add_node(Evaluation) reads a missing .sufficiencies")
-    def test_add_node_accepts_evaluation_nodes(self):
+    def test_add_node_keeps_evaluate_and_feedback_generator(self):
         def evaluate(response):
             return {}
 
+        def feedback(inputs):
+            return "text"
+
         graph = CriteriaGraph("g")
         graph.add_node(CriteriaGraph.Evaluation("E", "eval", "details", evaluate))
+        graph.add_node(CriteriaGraph.Criterion("C", "crit", "details", feedback_string_generator=feedback))
         assert graph.evaluations["E"].evaluate is evaluate
+        assert graph.criteria["C"].feedback_string_generator is feedback
 
     @pytest.mark.xfail(strict=True, reason="v0.1 bug: nodes define __eq__ without __hash__")
     def test_nodes_are_hashable_and_comparable_to_anything(self):
