@@ -328,7 +328,7 @@ class CriteriaGraph:
     def build_tree(self, starting_evaluation, return_node=RETURN, main_criteria=None):
         node = self.evaluations.get(starting_evaluation, None)
         if node is None:
-            raise Exception(f"Unknown evaluation node {node.label}.")
+            raise ValueError(f"Unknown evaluation node {starting_evaluation}.")
         identifier = 0
         root_node = CriteriaGraph.Tree(node, identifier=identifier, main_criteria=main_criteria)
         stack = [(edge.target, root_node) for (k, edge) in enumerate(node.outgoing)]

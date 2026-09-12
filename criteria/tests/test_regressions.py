@@ -35,7 +35,6 @@ class TestCriteriaParser:
 
 
 class TestGraph:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: build_tree reads .label from None for unknown nodes")
     def test_build_tree_rejects_unknown_evaluation(self):
         with pytest.raises(ValueError, match="Unknown evaluation node NOPE"):
             small_graph().build_tree("NOPE")
