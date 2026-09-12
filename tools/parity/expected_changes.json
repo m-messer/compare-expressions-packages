@@ -436,6 +436,40 @@
    "value_latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}"
   }
  },
+ "quantity.parse|legacy|2 liters": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "content": "2 litre",
+   "dimension": "length**3/10**3",
+   "expanded_unit": "metre**3/10**3",
+   "latex": "2~\\mathrm{litre}",
+   "messages": [],
+   "standard_unit": "metre**3",
+   "standard_value": "2*1/1000",
+   "unit": "liters",
+   "unit_factor": "1/1000",
+   "unit_latex": "\\mathrm{litre}",
+   "value": "2",
+   "value_latex": "2"
+  }
+ },
+ "quantity.parse|legacy|2 litres": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "content": "2 litre",
+   "dimension": "length**3/10**3",
+   "expanded_unit": "metre**3/10**3",
+   "latex": "2~\\mathrm{litre}",
+   "messages": [],
+   "standard_unit": "metre**3",
+   "standard_value": "2*1/1000",
+   "unit": "litres",
+   "unit_factor": "1/1000",
+   "unit_latex": "\\mathrm{litre}",
+   "value": "2",
+   "value_latex": "2"
+  }
+ },
  "quantity.parse|natural_si|(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)": {
   "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
   "value": {
@@ -812,6 +846,154 @@
    "unit_latex": null,
    "value": "(kilogrammegametre^2)/(fs^4daA)",
    "value_latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}"
+  }
+ },
+ "quantity.parse|natural|2 liters": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "content": "2 litre",
+   "dimension": "length**3/10**3",
+   "expanded_unit": "metre**3/10**3",
+   "latex": "2~\\mathrm{litre}",
+   "messages": [],
+   "standard_unit": "metre**3",
+   "standard_value": "2*1/1000",
+   "unit": "liters",
+   "unit_factor": "1/1000",
+   "unit_latex": "\\mathrm{litre}",
+   "value": "2",
+   "value_latex": "2"
+  }
+ },
+ "quantity.parse|natural|2 litres": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "content": "2 litre",
+   "dimension": "length**3/10**3",
+   "expanded_unit": "metre**3/10**3",
+   "latex": "2~\\mathrm{litre}",
+   "messages": [],
+   "standard_unit": "metre**3",
+   "standard_value": "2*1/1000",
+   "unit": "litres",
+   "unit_factor": "1/1000",
+   "unit_latex": "\\mathrm{litre}",
+   "value": "2",
+   "value_latex": "2"
+  }
+ },
+ "quantity.parse|strict_all|2 liters": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "content": "2 liters",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "2 \\cdot liters",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "ers",
+      "before": "2 li",
+      "marked": "t"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_1",
+     "REVERTED_UNIT",
+     {
+      "after": "",
+      "before": "2 lite",
+      "marked": "rs"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "2*e*i*l*r*s*t",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "2 liters",
+   "value_latex": "2 \\cdot liters"
+  }
+ },
+ "quantity.parse|strict_all|2 litres": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "content": "2 litres",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "2 \\cdot litres",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "s",
+      "before": "2 ",
+      "marked": "litre"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_1",
+     "REVERTED_UNIT",
+     {
+      "after": "",
+      "before": "2 litre",
+      "marked": "s"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "2*litre*s",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "2 litres",
+   "value_latex": "2 \\cdot litres"
+  }
+ },
+ "quantity.preview|legacy|2 liters": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "latex": "2~\\mathrm{litre}",
+   "sympy": "2 liters"
+  }
+ },
+ "quantity.preview|legacy|2 litres": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "latex": "2~\\mathrm{litre}",
+   "sympy": "2 litres"
+  }
+ },
+ "quantity.preview|natural|2 liters": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "latex": "2~\\mathrm{litre}",
+   "sympy": "2 liters"
+  }
+ },
+ "quantity.preview|natural|2 litres": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "latex": "2~\\mathrm{litre}",
+   "sympy": "2 litres"
+  }
+ },
+ "quantity.preview|strict_all|2 liters": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "latex": "2 \\cdot liters",
+   "sympy": "2 liters"
+  }
+ },
+ "quantity.preview|strict_all|2 litres": {
+  "reason": "units: litre's plurals were one string ('litres,liters'); '2 litres' now parses as 2 litre (natural/legacy), and stays one token in strict-mode value LaTeX",
+  "value": {
+   "latex": "2 \\cdot litres",
+   "sympy": "2 litres"
   }
  }
 }

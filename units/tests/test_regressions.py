@@ -15,7 +15,6 @@ def parse(expr, params=NATURAL):
 
 
 class TestUnitData:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: litre's plurals are the single string 'litres,liters'")
     @pytest.mark.parametrize("plural", ["litres", "liters"])
     def test_litre_plurals(self, plural):
         quantity = parse(f"2 {plural}")
