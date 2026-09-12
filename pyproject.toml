@@ -25,6 +25,13 @@ pytest-cov = "^7.0"
 ruff = "^0.16"
 mypy = "^2.3"
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error::SyntaxWarning",
+    # Our own deprecations are errors; third-party ones (e.g. antlr's typing.io) are not.
+    "error::DeprecationWarning:compareexpressions",
+]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 120

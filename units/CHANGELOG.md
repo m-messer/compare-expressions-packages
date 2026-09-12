@@ -39,3 +39,8 @@ Modules: `data` (was `unit_system_conversions`), `params`, `tags`, `parser`, `qu
 - The strict unit matcher tried every length up to the *number* of known units (hundreds) at each position; it now stops at the longest unit spelling.
 - The quantity preview previously passed the raw parameter dict to `parse_expression` as if it were parsing parameters; it now uses a proper parsing configuration (no output changes on the parity corpus).
 - The LaTeX preview of a response that is only a unit gave SymPy output such as `Nonekilogram`: the missing value was printed as `None`. It is now just the unit.
+
+### Known issues (unchanged from v0.1)
+
+- `REVERTED_UNIT` messages are emitted for every node carrying the unit tag, so a group that contains a unit is reported as well as the unit itself. The group's message positions come from synthetic tokens, so its before/marked/after text is garbled (e.g. for `2 kg + 3`). The message for the unit itself is correct.
+- Units' LaTeX preview removes all whitespace, so a value and unit must be separated with `~` (as MathLive does): `9.81 \mathrm{m}` reads as `9.81m`.

@@ -12,7 +12,7 @@ Each package has a checklist, and commits tick off items as they land:
 | 3 | [expression_parsing.md](expression_parsing.md) | `compareexpressions.expression_parsing` |
 | 4 | [units.md](units.md) | `compareexpressions.units` |
 
-Baseline before the refactor: **468 tests pass** (10 slr_parsing, 7 evaluation_result, 10 criteria, 157 expression_parsing, 284 units).
+Baseline before the refactor: **468 tests pass** (10 slr_parsing, 7 evaluation_result, 10 criteria, 157 expression_parsing, 284 units). After: **611** (45 slr_parsing, 47 criteria, 204 expression_parsing, 315 units; evaluation_result retired). **All four phases are done.**
 
 ## Agreed decisions
 
@@ -39,10 +39,10 @@ Baseline before the refactor: **468 tests pass** (10 slr_parsing, 7 evaluation_r
 ## Verification
 
 - [x] Before Phase 1: save a JSON snapshot of outputs for every carried-over test input (`parse_expression` str/latex, both `preview_function`s, quantity value/unit/standard forms). This is `tools/parity/baseline.json` (3221 probes).
-- [ ] After each package: `poetry run python tools/parity/check.py` passes. The only allowed differences are listed in `tools/parity/expected_changes.json`, each noted in the changelog.
-- [ ] `ruff check`, `ruff format --check`, `mypy` and `scripts/test.sh` pass for all packages on 3.11 and 3.12 (3.13 is blocked; see Risks).
-- [ ] No `SyntaxWarning`s; no `print(` or `eval(` left in `src/`.
-- [ ] Adoption smoke test: `parse_quantity("2 kg m/s^2", QuantityParams.from_dict({...}))` → `2 | kilogram metre/second^2`, and both `preview_function`s return a valid `lf_toolkit.preview.Result`.
+- [x] After each package: `poetry run python tools/parity/check.py` passes. 92 of 3221 probes changed, each a reviewed bug fix listed in `tools/parity/expected_changes.json` and noted in the changelogs.
+- [x] `ruff check`, `ruff format --check`, `mypy` and `scripts/test.sh` pass for all packages (checked locally on 3.12; CI runs 3.11 and 3.12. 3.13 is blocked; see Risks).
+- [x] No `SyntaxWarning`s (pytest turns them into errors); no `print(` or `eval(` left in `src/`.
+- [x] Adoption smoke test in a clean venv with the four built 0.2.0 wheels: `parse_quantity("2 kg m/s^2", QuantityParams.from_dict({...}))` → `2 | kilogram metre/second^2`. Both `preview_function`s return results matching lf_toolkit's `Result` shape (tested against the real class in the dev env). Runtime dependencies are only sympy and latex2sympy2.
 
 ## Risks / open items
 

@@ -6,10 +6,10 @@ evaluation function. Each package is independently installable; together they
 share the `compareexpressions` namespace. The app-specific *core evaluation*
 logic stays in compareExpressions.
 
-> **Refactor in progress** on branch `refactor/package-tidy`. See
-> [`docs/refactor/`](docs/refactor/README.md) for the plan and per-package
-> checklists. APIs are changing; each package's `CHANGELOG.md` records the
-> old → new names.
+> **0.2.0:** the post-extraction refactor (branch `refactor/package-tidy`)
+> reshaped every package's API. Each package's `CHANGELOG.md` has the
+> old → new migration table; [`docs/refactor/`](docs/refactor/README.md) has
+> the plan, decisions and per-package checklists.
 
 ## Packages
 
@@ -19,6 +19,22 @@ logic stays in compareExpressions.
 | `criteria` | `compareexpressions-criteria` | `compareexpressions.criteria` | Criteria DSL parser and evaluation graph | `slr_parsing` |
 | `expression_parsing` | `compareexpressions-expression-parsing` | `compareexpressions.expression_parsing` | SymPy parsing, preprocessing and LaTeX preview | `slr_parsing`, `sympy`, `latex2sympy2` |
 | `units` | `compareexpressions-units` | `compareexpressions.units` | Unit-system data, physical-quantity parsing and dimensional analysis | `slr_parsing`, `expression_parsing`, `sympy` |
+
+```python
+from compareexpressions.expression_parsing import (
+    ExpressionParams,
+    SympyParsingConfig,
+    parse_expression,
+    preprocess_expression,
+)
+from compareexpressions.units import parse_quantity
+
+params = ExpressionParams.from_dict(evaluation_params)  # JSON parameters → typed
+pre = preprocess_expression("response", response, params)  # aliases, brackets, |x|
+expr = parse_expression(pre.expression, SympyParsingConfig.from_params(params))
+
+quantity = parse_quantity("9.81 m/s^2", evaluation_params)  # value, unit, dimension, SI forms
+```
 
 `evaluation_result` has been retired: use `lf_toolkit.evaluation.Result`
 from [toolkit-python](https://github.com/lambda-feedback/toolkit-python), with
@@ -77,5 +93,8 @@ dependencies. The published metadata keeps plain version requirements.
 ## Feedback decoupling
 
 The parsing/units code does not resolve feedback text itself. Functions surface
-an `expression_parsing.FeedbackTag(tag, inputs)`, and consumers own the
-`tag -> string` mapping. See [`NOTES.md`](NOTES.md).
+an `expression_parsing.FeedbackTag(tag, inputs)` (tag names in
+`FeedbackTagName`; units adds `REVERTED_UNIT`), and consumers own the
+`tag -> string` mapping. `criteria.feedback` turns reached criteria into
+feedback on a result object such as `lf_toolkit.evaluation.Result`.
+See [`NOTES.md`](NOTES.md).

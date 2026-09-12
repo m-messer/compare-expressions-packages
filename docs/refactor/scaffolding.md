@@ -14,7 +14,7 @@ Applies to all packages. No behaviour changes: the parity check shows 3221/3221 
 - [x] Sibling deps by name in `[project.dependencies]`, enriched in `[tool.poetry.dependencies]` with `{ path = "../<pkg>", develop = true }`.
 - [x] `poetry build` each package: the wheel `METADATA` has only plain requirements, with no path references. All four wheels installed together in a fresh venv merge under one `compareexpressions` namespace (smoke test: `2 kg m/s^2` → `2 | kilogram metre/second^2`).
 - [x] Root `pyproject.toml` with `package-mode = false`. The dev group holds all packages as path/develop deps plus `pytest`, `pytest-cov`, `ruff` and `mypy`; `poetry.lock` is committed.
-- [ ] `lf_toolkit` git dependency pinned to `ae52fa6`: deferred to Phase 2, when it's first needed.
+- [x] `lf_toolkit` pinned to `ae52fa6`, as a **dev-only** dependency (Phase 2 decision; see [upstream-lf-toolkit.md](upstream-lf-toolkit.md)).
 
 **Deviation:** `expression_parsing`, `units` and the root dev env declare `requires-python = ">=3.11,<3.13"`. latex2sympy2 (both the PyPI release and the lambda-feedback fork) pins `antlr4-python3-runtime` 4.7.2, which imports `typing.io`, removed in Python 3.13. `slr_parsing` and `criteria` pass on 3.13. Lifting the cap needs latex2sympy regenerated with a newer ANTLR, which is upstream work.
 
@@ -22,7 +22,7 @@ Applies to all packages. No behaviour changes: the parity check shows 3221/3221 
 
 - [x] ruff (root): `target-version = "py311"`, line length 120, rules `E,F,W,I,UP,B,SIM,RUF,N`, with `RUF001-003` ignored (ambiguous unicode is the input domain). Packages sit in `extend-exclude` until their phase lands.
 - [x] mypy (root): `files` lists what is covered so far (`tools/parity`). Packages not yet refactored use `follow_imports = "silent"`. The per-package strictness settings and the `latex2sympy2` override are added in each package's phase.
-- [ ] pytest `filterwarnings = error::SyntaxWarning` (plus `error::DeprecationWarning` for our modules): deferred to the end of Phase 4, since the invalid-escape regexes are only fixed package by package.
+- [x] pytest `filterwarnings = error::SyntaxWarning` (plus `error::DeprecationWarning` for our modules): added at the end of Phase 4, once every package's invalid-escape regexes were fixed.
 - [x] `.github/workflows/ci.yml`: matrix Python 3.11/3.12 (3.13 excluded, see above). `pipx install poetry` → `poetry install` → `ruff check` → `ruff format --check` → `mypy` → `scripts/test.sh`.
 
 **Deviation:** tests run **per package** (`scripts/test.sh`), not in one pytest session. Every package has a `tests` package, and one pytest process can't import two packages with the same name (`--import-mode=importlib` breaks the tests' relative `_fixtures` imports).

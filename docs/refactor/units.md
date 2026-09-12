@@ -1,49 +1,51 @@
-# Phase 4: `compareexpressions.units`
+# Phase 4: `compareexpressions.units`: done
 
-Depends on `slr_parsing`, `expression_parsing`, `lf_toolkit` and `sympy`. The source is currently `physical_quantity_utilities.py` (602), `physical_quantity_preview.py` (128) and `unit_system_conversions.py` (145).
+Depends on `slr_parsing`, `expression_parsing` and `sympy`. Released as `0.2.0`; see [`units/CHANGELOG.md`](../../units/CHANGELOG.md) for the migration table and known issues.
 
-## Target modules
+## Modules
 
 | Module | Contents |
 |---|---|
-| `data.py` | NamedTuples `Prefix(name, symbol, factor, alternatives)`, `BaseUnit(name, symbol, dimension, alternatives, plurals)`, `Unit(name, symbol, si_expansion, alternatives, plurals)`. Constants `SI_PREFIXES`, `SI_BASE_UNITS`, `SI_DERIVED_UNITS`, `VERY_COMMON_UNITS`, `COMMON_UNITS`, `IMPERIAL_UNITS`, `UNIT_SETS`. `CONVERSION_TO_BASE_SI` is built by a function. |
-| `params.py` | `QuantityParams(ExpressionParams)`: `strictness: Literal["strict", "natural"]` (`legacy` normalised once, with a `legacy_preprocessing` flag) and `unit_sets: frozenset[str]` parsed from `units_string` |
-| `tags.py` | `QuantityTag` Enum with readable names (`UNIT`, `NON_UNIT`, `NUMBER`, and `R` named after checking its usage) |
-| `parser.py` | Unit dictionaries, `starts_with_unit` / `starts_with_number`, tag handler, error handlers, cached `build_quantity_parser(unit_sets, strictness)` |
-| `quantity.py` | `parse_quantity(expr, params, name) -> PhysicalQuantity`. `PhysicalQuantity` becomes a result dataclass; the rotate/split, revert, latex and standard-form logic move into focused functions. Forms stay eager. |
-| `preprocessing.py` | `preprocess_quantity(expr, params) -> str`, `preprocess_legacy` (patterns compiled once), `transform_prefixes_to_standard` |
+| `data.py` (was `unit_system_conversions.py`) | `Prefix` / `BaseUnit` / `Unit` named tuples; `SI_PREFIXES`, `SI_BASE_UNITS`, `SI_DERIVED_UNITS`, `VERY_COMMON_UNITS`, `COMMON_UNITS`, `IMPERIAL_UNITS` (ordered tuples); `UNIT_SETS`, `units_in`, `CONVERSION_TO_BASE_SI` |
+| `params.py` | `QuantityParams(ExpressionParams)`: `strictness`, `legacy_preprocessing`, `unit_sets`; `from_dict` maps `"legacy"` and `units_string` |
+| `tags.py` | `QuantityTag`: `UNIT`, `NON_UNIT`, `NUMBER`, `REJECTED_UNIT` (was `U`/`V`/`N`/`R`) |
+| `parser.py` | Unit dictionaries, tag handler, natural juxtaposition, `build_quantity_parser` (cached per unit sets and strictness) |
+| `quantity.py` | `PhysicalQuantity`, `parse_quantity`, `REVERTED_UNIT` |
+| `preprocessing.py` | `preprocess_quantity` → `Preprocessed`, `preprocess_legacy` (patterns compiled once), `transform_prefixes_to_standard` |
 | `preview.py` | `preview_function`, `fix_exponents` |
-| `errors.py` | `QuantityError` → `QuantityParseError`, `UnitConversionError` |
+| `errors.py` | `QuantityError` (a `ValueError`) → `QuantityParseError`, `UnitConversionError` |
+
+**Deviations from the plan:**
+- `R` became `REJECTED_UNIT`: units written next to each other in strict mode, which strict syntax doesn't accept as a unit.
+- `preprocess_quantity` returns `expression_parsing.Preprocessed` rather than a plain `str`, so it matches `preprocess_expression`: compareExpressions uses both interchangeably as a context's preprocessing hook.
+- `PhysicalQuantity` stays a regular class (its constructor computes everything, as before, so errors surface at the same point). compareExpressions reads its attributes, so only the awkward names changed (`*_latex_string` → `*_latex`, `converted_unit_factor` → `unit_factor`, `parsing_params` → `parsing_config`, `parameters` → `params`).
 
 ## Checklist
 
-### Bugs (regression test first, one commit each)
+### Bugs (regression test, one commit each)
 
-- [ ] Litre's plurals are written as `('litres,liters',)`, one string, so in natural/legacy mode `"2 litres"` parses as `2 | litre second`.
-- [ ] `"(2 m) s"` raises `IndexError` in every strictness mode (`_rotate` → `tag_handler`). Investigate the single-child rotate path, and `node.label in "SPACE"`, which is a substring test that should be `==`. It should either parse or raise `QuantityParseError`.
-- [ ] `fix_exponents` skips `len(notation)` twice, so `m**{-2}` → `m**(2)` (the sign is lost) and `x**{23}` → `x**(3)`.
-- [ ] Parser strictness defaults to `"natural"` but the tag handler defaults to `"strict"`, and `"legacy"` isn't normalised for the tag handler. This is latent (no output difference on a 14-input sample); `QuantityParams` becomes the single source.
-- [ ] `max_unit_name_length` measures the number of dict keys, not the longest name, so the strict matcher over-iterates. Perf only.
-- [ ] `preview_function` passes raw `params` to `parse_expression` and mutates `params["is_latex"]`.
+- [x] Litre's plurals were one string, so `2 litres` parsed as litre·second (12 parity probes).
+- [x] `(2 m) s` raised `IndexError` in every mode: rotating into a group made a cycle. Groups are atomic now (20 probes; they read like `(2 m)` alone).
+- [x] `fix_exponents` skipped `**` twice: `m**{-2}` → `m**(2)`, so the preview turned N·m⁻² into N·m². **Also found:** an unbraced exponent borrowed the next brace anywhere in the string.
+- [x] Strictness defaults differed between the parser and the tag handler, and legacy matched neither. The parser's handler is now the single source (changes the 4 legacy `3 µs` probes).
+- [x] `max_unit_name_length` counted keys, not characters (perf).
+- [x] The preview passed raw params to `parse_expression` and mutated `params["is_latex"]` (fixed when porting to the typed expression_parsing API in Phase 3).
+- [x] `node.label in "SPACE"` substring test → `==`.
+- [x] **Found during the refactor:** `5 m/s x` (a unit between value parts) rotated back and forth until `RecursionError`; it now raises `QuantityParseError`. The first port turned this into an infinite loop, which the parity run caught before commit.
+- [x] **Found during the refactor:** the LaTeX preview of a unit alone printed the missing value as `None` (`Nonekilogram`).
 
-### Restructure (no behaviour change)
+### Restructure / API
 
-- [ ] `unit_system_conversions.py` → `data.py` with NamedTuples, and remove every positional `x[0]..x[4]` index.
-- [ ] Split `physical_quantity_utilities.py` into `tags.py` / `parser.py` / `quantity.py` / `preprocessing.py`.
-- [ ] Cache the quantity parser per `(unit_sets, strictness)`; `preview_function` rebuilds it on every call today.
-- [ ] Compute valid units in one helper. `__init__` and `_value_latex` currently build two different sets (names only, versus names + symbols + alternatives + plurals); keep both variants but give them names.
-- [ ] Remove the module-level `temp_dict`, the identity-lambda `tag_handler` default and the `CONSIDER` comment.
-- [ ] Bare `Exception` → `QuantityParseError` / `UnitConversionError`.
-
-### API (break freely, recorded in `CHANGELOG.md`)
-
-- [ ] `set_of_*` → upper-case NamedTuple constants; `units_sets_dictionary` → `UNIT_SETS`
-- [ ] `QuantityTags` (U/V/N/R) → `QuantityTag` with descriptive names
-- [ ] `SLR_quantity_parser(params)` → `build_quantity_parser(unit_sets, strictness)`
-- [ ] `SLR_quantity_parsing(expr, params, parser, name)` → `parse_quantity(expr, params, name)`
-- [ ] `expression_preprocess` → `preprocess_quantity` (returns `str`, not `(True, expr, None)`)
-- [ ] `PhysicalQuantity.messages` keep `FeedbackTag` payloads (now the dataclass)
+- [x] Positional `x[0]..x[4]` indexing replaced by named fields everywhere; the tables were verified equal to v0.1's and the 1600 SI conversions identical.
+- [x] Deterministic (table-order) iteration instead of set order. Legacy rewrites were checked to be independent of alternation order.
+- [x] Valid-unit sets computed by one helper (`_unsplittable_names(..., all_forms=)`) for both uses.
+- [x] Module-level `temp_dict`, the identity-lambda `tag_handler` default and the `CONSIDER` comment removed.
+- [x] Bare `Exception`s → `QuantityParseError` / `UnitConversionError`; the preview no longer relabels quantity parse errors as "Failed to parse LaTeX expression".
 
 ### Types & lint
 
-- [ ] `disallow_untyped_defs` + `check_untyped_defs` mypy clean; `ruff` clean.
+- [x] mypy with typed definitions required; ruff lint and format.
+
+### Tests (284 → 315)
+
+- [x] `test_regressions.py`, `test_api.py`; carried-over suites ported (and no longer mutate the shared `default_parameters` fixture).

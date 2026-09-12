@@ -155,8 +155,15 @@ decisions are:
   structurally identical TypedDicts), because lf_toolkit@ae52fa6 installs
   ~237 MB of dev tools it declares as runtime requirements. It is a dev-only
   dependency until the drafted upstream fixes land.
+- **latex2sympy2 from PyPI**, not the lambda-feedback fork, so that the
+  packages stay publishable. `parse_latex` reproduces the fork's relevant
+  change itself: `x = 2` is an equation, not an assignment.
 - **Python 3.11–3.12.** 3.13 is blocked by latex2sympy2's pin on
   `antlr4-python3-runtime` 4.7.2.
 
 Behaviour is guarded by a parity baseline (`tools/parity/`) captured from the
-extracted v0.1 code. Only listed bug fixes may change outputs.
+extracted v0.1 code: 3221 probes, of which 92 changed, each a reviewed bug fix
+recorded in `tools/parity/expected_changes.json` and the changelogs. Over 40
+latent bugs were fixed in total (including an `eval()` code-injection path, two
+hangs and several mis-parses), each with a regression test. Tests went from 468
+to 611.
