@@ -124,3 +124,18 @@ class TestErrorRecovery:
         )
         output = parser.parse(parser.scan("(1+2)(3)"))
         assert [node.content_string() for node in output] == ["(1+2)", "(3)"]
+
+
+class TestTraversal:
+    def test_group_traversal_calls_the_action_once_per_node(self):
+        # Actions may have side effects (units records a message per call).
+        parser = build_expression_parser(delimiters=[(("(", ")"), group(1))])
+        root = parser.parse(parser.scan("(x)"))[0]
+        visited = []
+
+        def action(node):
+            visited.append(node.label)
+            return node.content
+
+        assert "".join(root.traverse(action)) == "(x)"
+        assert visited == ["GROUP", "UNDEFINED"]

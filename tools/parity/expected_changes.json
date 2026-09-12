@@ -152,5 +152,581 @@
    "latex": "xE",
    "sympy": "xE"
   }
+ },
+ "quantity.parse|legacy|(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)": {
+  "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
+  "value": {
+   "content": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2} \\cdot \\left(5.27 \\cdot \\pi \\cdot \\frac{1}{s} \\cdot q \\cdot r \\cdot t \\cdot 11 + 5 \\cdot 7\\right)^{4.3}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "(kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3)",
+      "marked": "(5.27*pi/secondquectoradianmetricton(11) + 5*7)^(4.3) (kilogram megametre^2)"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_1",
+     "REVERTED_UNIT",
+     {
+      "after": "qrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/",
+      "marked": "s"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_2",
+     "REVERTED_UNIT",
+     {
+      "after": "t(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/s",
+      "marked": "qr"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_3",
+     "REVERTED_UNIT",
+     {
+      "after": "(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqr",
+      "marked": "t"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_4",
+     "REVERTED_UNIT",
+     {
+      "after": "/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) ",
+      "marked": "(kilogram megametre^2)"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_5",
+     "REVERTED_UNIT",
+     {
+      "after": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "marked": "kilogrammegametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_6",
+     "REVERTED_UNIT",
+     {
+      "after": "megametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (",
+      "marked": "kilogram"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_7",
+     "REVERTED_UNIT",
+     {
+      "after": "2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre",
+      "marked": "megametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_8",
+     "REVERTED_UNIT",
+     {
+      "after": "^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogram",
+      "marked": "megametre"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_9",
+     "REVERTED_UNIT",
+     {
+      "after": "^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(",
+      "marked": "fs"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_10",
+     "REVERTED_UNIT",
+     {
+      "after": ")",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4",
+      "marked": "daA"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "gram*kilo*mega*metre**2*(527*pi/(100*(sqrt(11))) + 5*7)**(43/10)/((A*a*d*f*s**4))",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+   "value_latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2} \\cdot \\left(5.27 \\cdot \\pi \\cdot \\frac{1}{s} \\cdot q \\cdot r \\cdot t \\cdot 11 + 5 \\cdot 7\\right)^{4.3}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}"
+  }
+ },
+ "quantity.parse|legacy|(kilogrammegametre^2)/(fs^4daA)": {
+  "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
+  "value": {
+   "content": "(kilogrammegametre^2)/(fs^4daA)",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "/(fs^4daA)",
+      "before": "",
+      "marked": "(kilogram megametre^2)"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_1",
+     "REVERTED_UNIT",
+     {
+      "after": "(kilogrammegametre^2)/(fs^4daA)",
+      "before": "(kilogrammegametre^2)/(fs^4daA)",
+      "marked": "kilogrammegametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_2",
+     "REVERTED_UNIT",
+     {
+      "after": "megametre^2)/(fs^4daA)",
+      "before": "(",
+      "marked": "kilogram"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_3",
+     "REVERTED_UNIT",
+     {
+      "after": "2)/(fs^4daA)",
+      "before": "(kilogrammegametre",
+      "marked": "megametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_4",
+     "REVERTED_UNIT",
+     {
+      "after": "^2)/(fs^4daA)",
+      "before": "(kilogram",
+      "marked": "megametre"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_5",
+     "REVERTED_UNIT",
+     {
+      "after": "^4daA)",
+      "before": "(kilogrammegametre^2)/(",
+      "marked": "fs"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_6",
+     "REVERTED_UNIT",
+     {
+      "after": ")",
+      "before": "(kilogrammegametre^2)/(fs^4",
+      "marked": "daA"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "gram*kilo*mega*metre**2/((A*a*d*f*s**4))",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "(kilogrammegametre^2)/(fs^4daA)",
+   "value_latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}"
+  }
+ },
+ "quantity.parse|natural_si|(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)": {
+  "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
+  "value": {
+   "content": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2} \\cdot \\left(\\frac{5.27 \\cdot \\pi}{\\sqrt{11}} + 5 \\cdot 7\\right)^{4.3}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "(kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3)",
+      "marked": "(5.27*pi/secondqrt(11) + 5*7)^(4.3) (kilogram megametre^2)"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_1",
+     "REVERTED_UNIT",
+     {
+      "after": "qrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/",
+      "marked": "s"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_2",
+     "REVERTED_UNIT",
+     {
+      "after": "/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) ",
+      "marked": "(kilogram megametre^2)"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_3",
+     "REVERTED_UNIT",
+     {
+      "after": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "marked": "kilogrammegametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_4",
+     "REVERTED_UNIT",
+     {
+      "after": "megametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (",
+      "marked": "kilogram"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_5",
+     "REVERTED_UNIT",
+     {
+      "after": "2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre",
+      "marked": "megametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_6",
+     "REVERTED_UNIT",
+     {
+      "after": "^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogram",
+      "marked": "megametre"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_7",
+     "REVERTED_UNIT",
+     {
+      "after": "^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(",
+      "marked": "fs"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_8",
+     "REVERTED_UNIT",
+     {
+      "after": ")",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4",
+      "marked": "daA"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "gram*kilo*mega*metre**2*(527*pi/(100*(sqrt(11))) + 5*7)**(43/10)/((A*a*d*f*s**4))",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+   "value_latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2} \\cdot \\left(\\frac{5.27 \\cdot \\pi}{\\sqrt{11}} + 5 \\cdot 7\\right)^{4.3}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}"
+  }
+ },
+ "quantity.parse|natural_si|(kilogrammegametre^2)/(fs^4daA)": {
+  "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
+  "value": {
+   "content": "(kilogrammegametre^2)/(fs^4daA)",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "/(fs^4daA)",
+      "before": "",
+      "marked": "(kilogram megametre^2)"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_1",
+     "REVERTED_UNIT",
+     {
+      "after": "(kilogrammegametre^2)/(fs^4daA)",
+      "before": "(kilogrammegametre^2)/(fs^4daA)",
+      "marked": "kilogrammegametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_2",
+     "REVERTED_UNIT",
+     {
+      "after": "megametre^2)/(fs^4daA)",
+      "before": "(",
+      "marked": "kilogram"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_3",
+     "REVERTED_UNIT",
+     {
+      "after": "2)/(fs^4daA)",
+      "before": "(kilogrammegametre",
+      "marked": "megametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_4",
+     "REVERTED_UNIT",
+     {
+      "after": "^2)/(fs^4daA)",
+      "before": "(kilogram",
+      "marked": "megametre"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_5",
+     "REVERTED_UNIT",
+     {
+      "after": "^4daA)",
+      "before": "(kilogrammegametre^2)/(",
+      "marked": "fs"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_6",
+     "REVERTED_UNIT",
+     {
+      "after": ")",
+      "before": "(kilogrammegametre^2)/(fs^4",
+      "marked": "daA"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "gram*kilo*mega*metre**2/((A*a*d*f*s**4))",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "(kilogrammegametre^2)/(fs^4daA)",
+   "value_latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}"
+  }
+ },
+ "quantity.parse|natural|(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)": {
+  "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
+  "value": {
+   "content": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2} \\cdot \\left(\\frac{5.27 \\cdot \\pi}{\\sqrt{11}} + 5 \\cdot 7\\right)^{4.3}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "(kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3)",
+      "marked": "(5.27*pi/secondquectoradianmetricton(11) + 5*7)^(4.3) (kilogram megametre^2)"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_1",
+     "REVERTED_UNIT",
+     {
+      "after": "qrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/",
+      "marked": "s"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_2",
+     "REVERTED_UNIT",
+     {
+      "after": "t(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/s",
+      "marked": "qr"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_3",
+     "REVERTED_UNIT",
+     {
+      "after": "(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqr",
+      "marked": "t"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_4",
+     "REVERTED_UNIT",
+     {
+      "after": "/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) ",
+      "marked": "(kilogram megametre^2)"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_5",
+     "REVERTED_UNIT",
+     {
+      "after": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+      "marked": "kilogrammegametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_6",
+     "REVERTED_UNIT",
+     {
+      "after": "megametre^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (",
+      "marked": "kilogram"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_7",
+     "REVERTED_UNIT",
+     {
+      "after": "2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre",
+      "marked": "megametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_8",
+     "REVERTED_UNIT",
+     {
+      "after": "^2)/(fs^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogram",
+      "marked": "megametre"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_9",
+     "REVERTED_UNIT",
+     {
+      "after": "^4daA)",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(",
+      "marked": "fs"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_10",
+     "REVERTED_UNIT",
+     {
+      "after": ")",
+      "before": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4",
+      "marked": "daA"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "gram*kilo*mega*metre**2*(527*pi/(100*(sqrt(11))) + 5*7)**(43/10)/((A*a*d*f*s**4))",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)",
+   "value_latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2} \\cdot \\left(\\frac{5.27 \\cdot \\pi}{\\sqrt{11}} + 5 \\cdot 7\\right)^{4.3}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}"
+  }
+ },
+ "quantity.parse|natural|(kilogrammegametre^2)/(fs^4daA)": {
+  "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
+  "value": {
+   "content": "(kilogrammegametre^2)/(fs^4daA)",
+   "dimension": "1",
+   "expanded_unit": null,
+   "latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}",
+   "messages": [
+    [
+     "response_REVERTED_UNIT_0",
+     "REVERTED_UNIT",
+     {
+      "after": "/(fs^4daA)",
+      "before": "",
+      "marked": "(kilogram megametre^2)"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_1",
+     "REVERTED_UNIT",
+     {
+      "after": "(kilogrammegametre^2)/(fs^4daA)",
+      "before": "(kilogrammegametre^2)/(fs^4daA)",
+      "marked": "kilogrammegametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_2",
+     "REVERTED_UNIT",
+     {
+      "after": "megametre^2)/(fs^4daA)",
+      "before": "(",
+      "marked": "kilogram"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_3",
+     "REVERTED_UNIT",
+     {
+      "after": "2)/(fs^4daA)",
+      "before": "(kilogrammegametre",
+      "marked": "megametre^2"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_4",
+     "REVERTED_UNIT",
+     {
+      "after": "^2)/(fs^4daA)",
+      "before": "(kilogram",
+      "marked": "megametre"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_5",
+     "REVERTED_UNIT",
+     {
+      "after": "^4daA)",
+      "before": "(kilogrammegametre^2)/(",
+      "marked": "fs"
+     }
+    ],
+    [
+     "response_REVERTED_UNIT_6",
+     "REVERTED_UNIT",
+     {
+      "after": ")",
+      "before": "(kilogrammegametre^2)/(fs^4",
+      "marked": "daA"
+     }
+    ]
+   ],
+   "standard_unit": null,
+   "standard_value": "gram*kilo*mega*metre**2/((A*a*d*f*s**4))",
+   "unit": null,
+   "unit_factor": "1",
+   "unit_latex": null,
+   "value": "(kilogrammegametre^2)/(fs^4daA)",
+   "value_latex": "\\frac{gram \\cdot kilo \\cdot mega \\cdot metre^{2}}{A \\cdot a \\cdot d \\cdot f \\cdot s^{4}}"
+  }
  }
 }

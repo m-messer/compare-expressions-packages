@@ -30,11 +30,8 @@ def traverse_infix(expr_node: ExprNode, action: Callable[[ExprNode], Any]) -> li
 
 def traverse_group(expr_node: ExprNode, action: Callable[[ExprNode], Any]) -> list[tuple[bool, Any]]:
     """Like prefix traversal, but emits ``action(node)[0]`` before and ``[1]`` after the children."""
-    return [
-        (True, action(expr_node)[0]),
-        *((False, child) for child in expr_node.children),
-        (True, action(expr_node)[1]),
-    ]
+    delimiters = action(expr_node)
+    return [(True, delimiters[0]), *((False, child) for child in expr_node.children), (True, delimiters[1])]
 
 
 class Token:
