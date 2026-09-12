@@ -111,3 +111,15 @@ class TestSanitiseLatex:
         )
         result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=30)
         assert result.stdout.startswith("raised: Unclosed \\mathrm{")
+
+
+class TestLatexEquations:
+    def test_equation_parses_to_eq_on_any_latex2sympy_build(self):
+        # PyPI's latex2sympy2 reads "x = 2" as an assignment (returning 2); the
+        # lambda-feedback fork compareExpressions uses returns Eq(x, 2).
+        assert parse_latex("x = 2", {}) == "Eq(x, 2)"
+        assert parse_latex(r"\frac{x}{2} = y + 1", {}) == "Eq(x/2, y + 1)"
+
+    def test_more_than_one_equals_sign_is_rejected(self):
+        with pytest.raises(ValueError, match="="):
+            parse_latex("x = y = 2", {})

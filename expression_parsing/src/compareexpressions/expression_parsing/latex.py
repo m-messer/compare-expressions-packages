@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from latex2sympy2 import latex2sympy
-from sympy import Symbol, parse_expr
+from sympy import Eq, Symbol, parse_expr
 from sympy.parsing.sympy_parser import implicit_multiplication_application, standard_transformations
 from sympy.printing.latex import LatexPrinter
 
@@ -157,8 +157,16 @@ def parse_latex(response: str, symbols: Mapping[str, SymbolSpec], simplify: bool
 
     parsed_responses = set()
     for expression in responses:
+        if expression.count("=") > 1:
+            raise LatexParseError(f"An expression can contain at most one '=': {expression}")
         try:
-            parsed = _latex2sympy(expression, substitutions)
+            if "=" in expression:
+                # Split equations here: PyPI's latex2sympy2 reads "x = 2" as an
+                # assignment (returning 2), unlike the fork compareExpressions uses.
+                lhs, rhs = (_latex2sympy(side, substitutions) for side in expression.split("="))
+                parsed = Eq(lhs, rhs, evaluate=False)
+            else:
+                parsed = _latex2sympy(expression, substitutions)
         except Exception as e:
             raise LatexParseError(f"Failed to parse expression during preview: {e}") from e
         if simplify:
