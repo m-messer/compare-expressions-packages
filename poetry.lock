@@ -675,20 +675,6 @@ type = "directory"
 url = "criteria"
 
 [[package]]
-name = "compareexpressions-evaluation-result"
-version = "0.1.0"
-description = "Evaluation result container extracted from compareExpressions."
-optional = false
-python-versions = ">=3.11"
-groups = ["dev"]
-files = []
-develop = true
-
-[package.source]
-type = "directory"
-url = "evaluation_result"
-
-[[package]]
 name = "compareexpressions-expression-parsing"
 version = "0.1.0"
 description = "SymPy-based expression parsing, preprocessing and LaTeX preview extracted from compareExpressions."
@@ -3090,4 +3076,4 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "e82aa12506ee738c8c9b721ce872aa36e746623acb44bfdfc170aab325451b5b"
+content-hash = "bcaa2feb0b6b31e2f30ca36c9c365dc7aa1061008065f432183f4f5a290c33e8"

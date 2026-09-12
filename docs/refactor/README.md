@@ -24,8 +24,8 @@ Baseline before the refactor: **468 tests pass** (10 slr_parsing, 7 evaluation_r
 | Tooling | Poetry, ruff (lint + format), mypy, GitHub Actions CI. Python floor **3.11**, which lf_toolkit requires. |
 | Import names | PEP 420 namespace: `compareexpressions.slr_parsing`, `.criteria`, `.expression_parsing`, `.units`. Distribution names stay `compareexpressions-<pkg>`. |
 | Layout | `src/` layout per package, plus a root non-package Poetry project (`package-mode = false`) that path-installs every package into one dev venv. |
-| evaluation_result | **Retired.** Generic result handling moves to `lf_toolkit.evaluation.Result`; criteria-specific helpers move into `criteria`. |
-| lf_toolkit | Runtime dependency of `expression_parsing`, `units` and `criteria` for `Params`/`SymbolDict`/`Preview`/`Result`. It is not on PyPI, so it's a git dependency pinned to `lambda-feedback/toolkit-python@ae52fa6`. We install its core only, without the `parsing` extra, which pins a different latex2sympy fork. |
+| evaluation_result | **Retired** (Phase 2). Generic result handling moves to `lf_toolkit.evaluation.Result`; criteria-specific helpers are in `criteria.feedback`, which records blank feedback as `""` so tags are kept. |
+| lf_toolkit | **Structural typing for now** (revised in Phase 2). lf_toolkit@ae52fa6 declares its dev tools (boto3, pillow, pydantic, ...) as runtime requirements: 80 packages / 237 MB. So our packages use a `ResultLike` protocol and TypedDicts structurally identical to lf_toolkit's, and lf_toolkit is a **dev-only** dependency (pinned git) for compatibility tests. It becomes a real dependency once [the upstream fixes](upstream-lf-toolkit.md) land. |
 | FeedbackTag | Stays in `expression_parsing` as a frozen dataclass plus a `StrEnum` of tag names. Consumers resolve tags to strings before `Result.add_feedback(tag, str)`. |
 
 ## Working conventions
@@ -45,7 +45,7 @@ Baseline before the refactor: **468 tests pass** (10 slr_parsing, 7 evaluation_r
 
 ## Risks / open items
 
-- **lf_toolkit is git-only**, so these packages can't go on PyPI until it is published. Importing `lf_toolkit.shared` also pulls in its server stack (anyio, ujson, jsonrpcserver) through `lf_toolkit/__init__.py`. Worth raising upstream.
+- **lf_toolkit is git-only** (not on PyPI) and **ships its dev tools as runtime requirements**. Both block a hard dependency; see [upstream-lf-toolkit.md](upstream-lf-toolkit.md) for the drafted fixes (including skipping blank entries in `Result.feedback`).
 - **Parity with compareExpressions:** several bug fixes change results for some inputs. The changelogs list each one so adoption can re-run compareExpressions' 3128-test suite with them in mind.
 - ~~Poetry path-dependency enrichment~~: checked in Phase 0. Built wheels carry only plain requirements.
 - **Python 3.13 is blocked** for `expression_parsing` and `units`: latex2sympy2 pins `antlr4-python3-runtime` 4.7.2, which imports `typing.io`, removed in 3.13. Both the PyPI release and the lambda-feedback fork are affected. Lifting this needs latex2sympy regenerated with a newer ANTLR (upstream work).

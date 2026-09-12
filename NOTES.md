@@ -150,9 +150,11 @@ decisions are:
   Poetry, with a root dev environment.
 - **Retire `evaluation_result`** in favour of `lf_toolkit.evaluation.Result`
   from [toolkit-python](https://github.com/lambda-feedback/toolkit-python).
-  `expression_parsing`, `units` and `criteria` take `Params`/`SymbolDict`/
-  `Preview`/`Result` from lf_toolkit, which is a git dependency because it
-  isn't on PyPI.
+  Its criteria-specific parts are now `criteria.feedback`. For now the
+  packages only *type* against lf_toolkit (a `ResultLike` protocol and
+  structurally identical TypedDicts), because lf_toolkit@ae52fa6 installs
+  ~237 MB of dev tools it declares as runtime requirements. It is a dev-only
+  dependency until the drafted upstream fixes land.
 - **Python 3.11–3.12.** 3.13 is blocked by latex2sympy2's pin on
   `antlr4-python3-runtime` 4.7.2.
 

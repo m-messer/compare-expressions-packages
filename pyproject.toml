@@ -13,7 +13,6 @@ package-mode = false
 
 [tool.poetry.group.dev.dependencies]
 compareexpressions-slr-parsing = { path = "slr_parsing", develop = true }
-compareexpressions-evaluation-result = { path = "evaluation_result", develop = true }
 compareexpressions-criteria = { path = "criteria", develop = true }
 compareexpressions-expression-parsing = { path = "expression_parsing", develop = true }
 compareexpressions-units = { path = "units", develop = true }
@@ -33,7 +32,6 @@ line-length = 120
 # (see docs/refactor/). tools/parity/capture_v0_1.py targets the frozen
 # v0.1 API and is kept verbatim.
 extend-exclude = [
-    "evaluation_result",
     "criteria",
     "expression_parsing",
     "units",
@@ -62,7 +60,6 @@ explicit_package_bases = true
 mypy_path = [
     "tools/parity",
     "slr_parsing/src",
-    "evaluation_result/src",
     "criteria/src",
     "expression_parsing/src",
     "units/src",

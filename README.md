@@ -19,7 +19,10 @@ logic stays in compareExpressions.
 | `criteria` | `compareexpressions-criteria` | `compareexpressions.criteria` | Criteria DSL parser and evaluation graph | `slr_parsing` |
 | `expression_parsing` | `compareexpressions-expression-parsing` | `compareexpressions.expression_parsing` | SymPy parsing, preprocessing and LaTeX preview | `slr_parsing`, `sympy`, `latex2sympy2` |
 | `units` | `compareexpressions-units` | `compareexpressions.units` | Unit-system data, physical-quantity parsing and dimensional analysis | `slr_parsing`, `expression_parsing`, `sympy` |
-| `evaluation_result` | `compareexpressions-evaluation-result` | `compareexpressions.evaluation_result` | Evaluation result container (**to be retired** in favour of `lf_toolkit.evaluation.Result`) | — |
+
+`evaluation_result` has been retired: use `lf_toolkit.evaluation.Result`
+from [toolkit-python](https://github.com/lambda-feedback/toolkit-python), with
+the helpers in `compareexpressions.criteria.feedback` for criteria feedback.
 
 Each package uses a `src/` layout: `units/src/compareexpressions/units/`.
 There is deliberately no `compareexpressions/__init__.py`; the namespace is
