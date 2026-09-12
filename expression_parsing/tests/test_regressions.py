@@ -57,7 +57,6 @@ class TestParsing:
             with pytest.raises(ValueError, match="set"):
                 parse_expression("{x+1}*{x-1}", parsing_params(strict_syntax=True))
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: create_sympy_parsing_params needs pre-merged defaults")
     def test_parsing_params_default_missing_keys(self):
         assert create_sympy_parsing_params({})["complexNumbers"] is False
 

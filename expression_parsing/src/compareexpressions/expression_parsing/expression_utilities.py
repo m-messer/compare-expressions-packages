@@ -723,6 +723,7 @@ def create_sympy_parsing_params(params, unsplittable_symbols=tuple(), symbol_ass
         parsing_params: A dictionary that contains necessary info for the
                         parse_expression function.
     '''
+    params = {**default_parameters, **params}
 
     unsplittable_symbols = list(unsplittable_symbols)+params.get("reserved_keywords", [])
     if "symbols" in params.keys():
