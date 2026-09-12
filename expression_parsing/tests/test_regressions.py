@@ -7,22 +7,20 @@ from copy import deepcopy
 
 import pytest
 
-from compareexpressions.expression_parsing import default_parameters
-from compareexpressions.expression_parsing.expression_utilities import (
+from compareexpressions.expression_parsing import (
+    ExpressionParams,
+    SympyParsingConfig,
     create_expression_set,
-    create_sympy_parsing_params,
     parse_expression,
+    parse_latex,
+    preview_function,
     substitute_input_symbols,
     sympy_to_latex,
 )
-from compareexpressions.expression_parsing.preview_utilities import parse_latex
-from compareexpressions.expression_parsing.symbolic_preview import preview_function
 
 
 def parsing_params(**overrides):
-    params = deepcopy(default_parameters)
-    params.update(overrides)
-    return create_sympy_parsing_params(params)
+    return SympyParsingConfig.from_params(ExpressionParams.from_dict(overrides))
 
 
 class TestSymbolAssumptions:
@@ -38,9 +36,9 @@ class TestSymbolAssumptions:
 
     def test_valid_assumptions_still_apply(self):
         params = parsing_params(symbol_assumptions="('a','positive') ('f','function') ('c','constant')")
-        assert params["symbol_dict"]["a"].is_positive
-        assert params["symbol_dict"]["f"](1).func.__name__ == "f"
-        assert "c" in params["constants"]
+        assert params.symbol_dict["a"].is_positive
+        assert params.symbol_dict["f"](1).func.__name__ == "f"
+        assert "c" in params.constants
 
 
 class TestParsing:
@@ -60,24 +58,24 @@ class TestParsing:
                 parse_expression("{x+1}*{x-1}", parsing_params(strict_syntax=True))
 
     def test_parsing_params_default_missing_keys(self):
-        assert create_sympy_parsing_params({})["complexNumbers"] is False
+        assert SympyParsingConfig.from_params(ExpressionParams.from_dict({})).complex_numbers is False
 
     def test_lone_plus_minus(self):
-        assert sorted(create_expression_set("plus_minus", {})) == ["", "-"]
+        assert sorted(create_expression_set("plus_minus", ExpressionParams())) == ["", "-"]
 
 
 class TestInputSymbols:
     def test_user_defined_lambda_survives_repeated_substitution(self):
-        params = {"symbols": {"lambda": {"latex": r"\Lambda_0", "aliases": ["lam"]}}}
+        params = ExpressionParams.from_dict({"symbols": {"lambda": {"latex": r"\Lambda_0", "aliases": ["lam"]}}})
         assert substitute_input_symbols(["lam"], params) == ["lamda"]
         assert substitute_input_symbols(["lam"], params) == ["lamda"]
 
     def test_empty_aliases_do_not_remove_real_ones(self):
-        params = {"symbols": {"x": {"latex": "x", "aliases": ["", "", "xx"]}}}
+        params = ExpressionParams.from_dict({"symbols": {"x": {"latex": "x", "aliases": ["", "", "xx"]}}})
         assert substitute_input_symbols(["xx"], params) == ["x"]
 
     def test_aliases_are_stripped(self):
-        params = {"symbols": {"x": {"latex": "x", "aliases": [" xx "]}}}
+        params = ExpressionParams.from_dict({"symbols": {"x": {"latex": "x", "aliases": [" xx "]}}})
         assert substitute_input_symbols(["xx"], params) == ["x"]
 
 
@@ -94,10 +92,10 @@ class TestNoSideEffects:
         assert settings == {"mul_symbol": r" \cdot "}
 
     def test_parse_latex_reports_errors_cleanly(self, capsys):
-        parse_latex("x", {"x": {"latex": "x", "aliases": ["1+"]}}, False)
+        parse_latex("x", ExpressionParams.from_dict({"symbols": {"x": {"latex": "x", "aliases": ["1+"]}}}).symbols)
         assert capsys.readouterr().out == ""
         with pytest.raises(ValueError) as info:
-            parse_latex(r"\frac{x", {}, False)
+            parse_latex(r"\frac{x", {})
         assert len(info.value.args) == 1
 
 
@@ -105,8 +103,7 @@ class TestSanitiseLatex:
     def test_unclosed_wrapper_raises_instead_of_hanging(self):
         # Run in a subprocess: the v0.1 code loops forever on this input.
         script = (
-            "from compareexpressions.expression_parsing.preview_utilities import sanitise_latex\n"
-            "from compareexpressions.expression_parsing.errors import LatexParseError\n"
+            "from compareexpressions.expression_parsing import LatexParseError, sanitise_latex\n"
             "try:\n"
             "    sanitise_latex(r'3 \\mathrm{kg')\n"
             "except LatexParseError as e:\n"

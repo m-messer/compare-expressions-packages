@@ -21,7 +21,7 @@ import sys
 import warnings
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -39,8 +39,8 @@ from corpus import (  # noqa: E402
 
 from compareexpressions.criteria import build_criteria_parser  # noqa: E402
 from compareexpressions.expression_parsing import (  # noqa: E402
-    create_sympy_parsing_params,
-    default_parameters,
+    ExpressionParams,
+    SympyParsingConfig,
     parse_expression,
     sympy_to_latex,
 )
@@ -69,29 +69,26 @@ def criteria_tree(criterion: str) -> str:
 
 
 def expression_params(variant: str) -> dict[str, Any]:
-    params: dict[str, Any] = deepcopy(default_parameters)
-    params.update(deepcopy(EXPRESSION_VARIANTS[variant]))
-    return params
+    return deepcopy(EXPRESSION_VARIANTS[variant])
 
 
 def expression_parse(expr: str, variant: str) -> dict[str, Any]:
-    params = expression_params(variant)
-    parsed = parse_expression(expr, create_sympy_parsing_params(params))
+    params = ExpressionParams.from_dict(expression_params(variant))
+    parsed = parse_expression(expr, SympyParsingConfig.from_params(params))
     if isinstance(parsed, set):
         return {"parsed": sorted(str(p) for p in parsed)}
-    return {"parsed": str(parsed), "latex": sympy_to_latex(parsed, params.get("symbols", {}))}
+    return {"parsed": str(parsed), "latex": sympy_to_latex(parsed, params.symbols)}
 
 
 def expression_preview(expr: str, variant: str, is_latex: bool) -> dict[str, Any]:
     params = expression_params(variant)
     if is_latex:
         params["is_latex"] = True
-    return dict(symbolic_preview(expr, cast(Any, params))["preview"])
+    return dict(symbolic_preview(expr, params)["preview"])
 
 
 def quantity_params(variant: str) -> dict[str, Any]:
-    params: dict[str, Any] = deepcopy(default_parameters)
-    params.update({"physical_quantity": True, "strictness": "natural", "units_string": "SI common imperial"})
+    params: dict[str, Any] = {"physical_quantity": True, "strictness": "natural", "units_string": "SI common imperial"}
     params.update(deepcopy(QUANTITY_VARIANTS[variant]))
     return params
 
@@ -123,7 +120,7 @@ def quantity_preview_dict(expr: str, variant: str, is_latex: bool) -> dict[str, 
     params = quantity_params(variant)
     if is_latex:
         params["is_latex"] = True
-    return dict(quantity_preview(expr, cast(Any, params))["preview"])
+    return dict(quantity_preview(expr, params)["preview"])
 
 
 # --- Probe layout: must stay key-for-key identical to capture_v0_1.py. ---

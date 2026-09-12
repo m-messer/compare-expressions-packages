@@ -1,0 +1,151 @@
+"""Typed parameters for expression parsing and preview.
+
+Evaluation functions receive their parameters as a JSON object. Use
+:meth:`ExpressionParams.from_dict` to turn it into an :class:`ExpressionParams`;
+unrelated keys are ignored.
+"""
+
+from __future__ import annotations
+
+import ast
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field, fields, replace
+from typing import Any, Literal, get_args
+
+from .errors import ExpressionParsingError, SymbolAssumptionError
+from .preprocessing import find_matching_parenthesis
+
+Convention = Literal["equal_precedence", "implicit_higher_precedence"]
+"""How implicit multiplication binds relative to ``/``: ``a/bc`` is ``a/b*c`` or ``a/(b*c)``."""
+
+
+@dataclass(frozen=True)
+class SymbolSpec:
+    """A task-defined symbol: its LaTeX and the other ways a learner may write it."""
+
+    latex: str | None = None
+    aliases: tuple[str, ...] = ()
+
+
+def _normalise_symbols(symbols: Mapping[str, SymbolSpec | Mapping[str, Any]]) -> dict[str, SymbolSpec]:
+    """Drop blank codes, strip aliases and drop blank ones, and move ``lambda`` to ``lamda``.
+
+    ``lambda`` is a Python keyword, so it is parsed as the symbol ``lamda``
+    (which always exists, with ``lambda`` as an alias).
+    """
+    normalised: dict[str, SymbolSpec] = {}
+    for code, spec in symbols.items():
+        if not code.strip():
+            continue
+        if not isinstance(spec, SymbolSpec):
+            spec = SymbolSpec(latex=spec.get("latex"), aliases=tuple(spec.get("aliases", ())))
+        aliases = tuple(alias.strip() for alias in spec.aliases if alias.strip())
+        normalised[code] = SymbolSpec(spec.latex, aliases)
+    lamda = normalised.pop("lambda", None) or normalised.get("lamda") or SymbolSpec(r"\lambda")
+    if "lambda" not in lamda.aliases:
+        lamda = SymbolSpec(lamda.latex, (*lamda.aliases, "lambda"))
+    normalised["lamda"] = lamda
+    return normalised
+
+
+def _normalise_input_symbols(entries: Iterable[Any]) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    """Legacy ``[[code, [alternatives]], ...]``: drop blank codes, strip and drop blank alternatives."""
+    normalised = []
+    for entry in entries:
+        code = entry[0].strip() if entry else ""
+        if code:
+            alternatives = entry[1] if len(entry) > 1 else ()
+            normalised.append((code, tuple(a.strip() for a in alternatives if a.strip())))
+    return tuple(normalised)
+
+
+def parse_symbol_assumptions(text: str) -> tuple[tuple[str, str], ...]:
+    """Parse ``"('a','positive') ('f','function')"`` into ``(('a', 'positive'), ('f', 'function'))``.
+
+    Each parenthesised group must be a pair of string literals; nothing is
+    evaluated as code.
+    """
+    assumptions = []
+    index = text.find("(")
+    while index > -1:
+        index_match = find_matching_parenthesis(text, index)
+        if index_match < 0:
+            raise SymbolAssumptionError("List of symbol assumptions not written correctly.")
+        try:
+            value = ast.literal_eval(text[index + 1 : index_match])
+        except (ValueError, SyntaxError, TypeError, MemoryError, RecursionError) as e:
+            raise SymbolAssumptionError("List of symbol assumptions not written correctly.") from e
+        if not (isinstance(value, tuple) and len(value) == 2 and all(isinstance(v, str) for v in value)):
+            raise SymbolAssumptionError(
+                f"Symbol assumption {text[index : index_match + 1]} must be a pair of strings, e.g. ('x', 'positive')."
+            )
+        assumptions.append(value)
+        index = text.find("(", index_match + 1)
+    return tuple(assumptions)
+
+
+# JSON parameter names that differ from the field names.
+_ALIASES = {"complexNumbers": "complex_numbers", "specialFunctions": "special_functions"}
+
+
+@dataclass(frozen=True)
+class ExpressionParams:
+    """Parameters controlling how expressions are preprocessed, parsed and previewed.
+
+    ``symbols`` is normalised on construction (see :func:`_normalise_symbols`),
+    so every instance has a ``lamda`` symbol.
+    """
+
+    complex_numbers: bool = False
+    """Treat ``I`` as the imaginary unit (otherwise it is a plain symbol)."""
+    convention: Convention | None = "equal_precedence"
+    """Implicit-multiplication precedence, or ``None`` to leave the input as written."""
+    elementary_functions: bool = False
+    """Recognise function names and aliases (``sin``, ``arcsin``, ``ln``, ...), Greek letters and ``E``."""
+    special_functions: bool = False
+    """Parse ``beta``, ``gamma``, ``zeta``, ``Lambda`` and ``Chi`` as SymPy's special functions."""
+    strict_syntax: bool = False
+    """Require explicit syntax: no implicit multiplication, ``[]``/``{}`` are not brackets."""
+    simplify: bool = False
+    rationalise: bool = True
+    """Parse decimals as rationals."""
+    is_latex: bool = False
+    """The response is LaTeX (preview only)."""
+    symbols: Mapping[str, SymbolSpec] = field(default_factory=dict)
+    input_symbols: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    """Legacy ``[code, [alternatives]]`` symbol definitions."""
+    reserved_keywords: tuple[str, ...] = ()
+    unsplittable_symbols: tuple[str, ...] = ()
+    symbol_assumptions: tuple[tuple[str, str], ...] = ()
+    """``(symbol, assumption)`` pairs, e.g. ``("x", "positive")``, ``("f", "function")``."""
+    plus_minus: str | None = None
+    """Text the learner uses for ±, replaced by ``plus_minus``."""
+    minus_plus: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.convention is not None and self.convention not in get_args(Convention):
+            raise ExpressionParsingError(f"Unknown convention {self.convention!r}.")
+        object.__setattr__(self, "symbols", _normalise_symbols(self.symbols))
+        object.__setattr__(self, "input_symbols", _normalise_input_symbols(self.input_symbols))
+        object.__setattr__(self, "reserved_keywords", tuple(self.reserved_keywords))
+        object.__setattr__(self, "unsplittable_symbols", tuple(self.unsplittable_symbols))
+        object.__setattr__(self, "symbol_assumptions", tuple(tuple(pair) for pair in self.symbol_assumptions))
+
+    @classmethod
+    def from_dict(cls, params: Mapping[str, Any]) -> ExpressionParams:
+        """Build from evaluation-function parameters (JSON keys); unrelated keys are ignored."""
+        names = {f.name for f in fields(cls)}
+        values = {_ALIASES.get(key, key): value for key, value in params.items()}
+        values = {key: value for key, value in values.items() if key in names}
+        if isinstance(values.get("symbol_assumptions"), str):
+            values["symbol_assumptions"] = parse_symbol_assumptions(values["symbol_assumptions"])
+        return cls(**values)
+
+    def replace(self, **changes: Any) -> ExpressionParams:
+        """A copy with some fields changed."""
+        return replace(self, **changes)
+
+
+def as_params(params: ExpressionParams | Mapping[str, Any]) -> ExpressionParams:
+    """Accept either typed parameters or an evaluation-function parameter mapping."""
+    return params if isinstance(params, ExpressionParams) else ExpressionParams.from_dict(params)

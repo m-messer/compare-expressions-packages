@@ -688,7 +688,6 @@ develop = true
 compareexpressions-slr-parsing = ">=0.2.0,<0.3.0"
 latex2sympy2 = "*"
 sympy = ">=1.12,<2.0"
-typing_extensions = "*"
 
 [package.source]
 type = "directory"

@@ -1,10 +1,14 @@
 import re
 from enum import Enum
-from compareexpressions.expression_parsing.expression_utilities import (
+from compareexpressions.expression_parsing import (
+    ExpressionParams,
+    FeedbackTag,
+    SympyParsingConfig,
+    parse_expression,
+    parse_latex,
     substitute,
-    create_sympy_parsing_params,
-    parse_expression
 )
+from compareexpressions.expression_parsing import preview_function as symbolic_preview
 from compareexpressions.slr_parsing import (
     SLRParser,
     relabel,
@@ -19,10 +23,6 @@ from compareexpressions.slr_parsing import (
 from .unit_system_conversions import\
     set_of_SI_prefixes, set_of_SI_base_unit_dimensions, set_of_derived_SI_units_in_SI_base_units,\
     set_of_common_units_in_SI, set_of_very_common_units_in_SI, set_of_imperial_units, conversion_to_base_si_units
-from compareexpressions.expression_parsing import FeedbackTag
-
-from compareexpressions.expression_parsing.symbolic_preview import preview_function as symbolic_preview
-from compareexpressions.expression_parsing.preview_utilities import parse_latex
 
 QuantityTags = Enum("QuantityTags", {v: i for i, v in enumerate("UVNR", 1)})
 
@@ -49,8 +49,8 @@ class PhysicalQuantity:
         dimensions = set(x[2] for x in set_of_SI_base_unit_dimensions)
         unsplittable_symbols = list(prefixes | fundamental_units | valid_units | dimensions)
         symbol_assumptions = tuple((f'{s}', 'positive') for s in unsplittable_symbols)
-        self.parsing_params = create_sympy_parsing_params(
-            parameters,
+        self.parsing_params = SympyParsingConfig.from_params(
+            ExpressionParams.from_dict(parameters),
             unsplittable_symbols=unsplittable_symbols,
             symbol_assumptions=symbol_assumptions,
         )
@@ -213,8 +213,8 @@ class PhysicalQuantity:
         converted_value = self.value.content_string() if self.value is not None else None
 
         if converted_value is not None and self.parameters.get("is_latex", False):
-            symbols = self.parameters.get("symbols", {})
-            converted_value = parse_latex(converted_value, symbols, self.parameters.get("simplify", False))
+            expression_params = ExpressionParams.from_dict(self.parameters)
+            converted_value = parse_latex(converted_value, expression_params.symbols, expression_params.simplify)
         converted_unit = None
         expanded_unit = None
         converted_dimension = parse_expression("1", parsing_params)

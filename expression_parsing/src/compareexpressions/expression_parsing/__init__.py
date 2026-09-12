@@ -1,80 +1,83 @@
-"""SymPy-based expression parsing, preprocessing, and LaTeX preview.
+"""SymPy-based expression parsing, preprocessing and LaTeX preview.
 
-Extracted from compareExpressions and decoupled from app-specific feedback
-strings (see feedback.py / FeedbackTag). Modules:
-- expression_utilities.py   <- app/utility/expression_utilities.py
-- syntactical_comparison.py <- app/utility/syntactical_comparison_utilities.py
-- preview_utilities.py      <- app/utility/preview_utilities.py
-- symbolic_preview.py       <- app/preview_implementations/symbolic_preview.py
+Typical use::
 
-Depends on the ``slr_parsing`` package, plus sympy and latex2sympy2.
+    params = ExpressionParams.from_dict(evaluation_params)
+    pre = preprocess_expression("response", response, params)
+    expr = parse_expression(pre.expression, SympyParsingConfig.from_params(params))
+    latex = sympy_to_latex(expr, params.symbols)
 
-Submodules are importable directly (e.g.
-``from compareexpressions.expression_parsing.expression_utilities import parse_expression``); the
-most commonly used names are also re-exported here for convenience.
+or ``preview_function(response, evaluation_params)`` for a preview.
+
+Extracted from compareExpressions and decoupled from its feedback strings:
+feedback is surfaced as :class:`FeedbackTag`.
 """
 
-from .feedback import FeedbackTag
-
-from .expression_utilities import (
-    default_parameters,
-    parse_expression,
-    create_sympy_parsing_params,
-    preprocess_expression,
-    substitute,
-    substitute_input_symbols,
-    create_expression_set,
-    convert_absolute_notation,
-    sympy_to_latex,
-    sympy_symbols,
-    extract_latex,
-    find_matching_parenthesis,
+from .conventions import apply_convention, convention_parser
+from .errors import ExpressionParsingError, ExpressionSyntaxError, LatexParseError, SymbolAssumptionError
+from .feedback import FeedbackTag, FeedbackTagName
+from .latex import extract_latex, latex_symbols, parse_latex, sanitise_latex, sympy_to_latex
+from .numbers import (
+    PATTERNS,
+    SyntacticalPattern,
     compute_relative_tolerance_from_significant_decimals,
-    SymbolDict,
-)
-from .syntactical_comparison import (
-    patterns,
-    is_number,
-    is_number_regex,
     generate_arbitrary_number_pattern_matcher,
+    is_number,
 )
-from .preview_utilities import (
-    Params,
-    Preview,
-    Result,
-    parse_latex,
-    sanitise_latex,
+from .params import Convention, ExpressionParams, SymbolSpec, parse_symbol_assumptions
+from .preprocessing import (
+    Preprocessed,
+    convert_absolute_notation,
+    convert_bracket_notation,
+    create_expression_set,
+    find_matching_parenthesis,
+    has_matching_brackets,
+    is_multiple_answers_wrapper,
+    preprocess_expression,
 )
-from .symbolic_preview import (
-    preview_function,
-    parse_symbolic,
-)
+from .preview import Preview, Result, parse_symbolic, preview_function
+from .substitution import substitute, substitute_input_symbols, substitutions_sort_key
+from .sympy_parsing import SympyParsingConfig, parse_expression, sympy_symbols
 
 __all__ = [
+    "PATTERNS",
+    "Convention",
+    "ExpressionParams",
+    "ExpressionParsingError",
+    "ExpressionSyntaxError",
     "FeedbackTag",
-    "default_parameters",
-    "parse_expression",
-    "create_sympy_parsing_params",
-    "preprocess_expression",
-    "substitute",
-    "substitute_input_symbols",
-    "create_expression_set",
-    "convert_absolute_notation",
-    "sympy_to_latex",
-    "sympy_symbols",
-    "extract_latex",
-    "find_matching_parenthesis",
-    "compute_relative_tolerance_from_significant_decimals",
-    "SymbolDict",
-    "patterns",
-    "is_number",
-    "is_number_regex",
-    "generate_arbitrary_number_pattern_matcher",
-    "Params",
+    "FeedbackTagName",
+    "LatexParseError",
+    "Preprocessed",
     "Preview",
     "Result",
+    "SymbolAssumptionError",
+    "SymbolSpec",
+    "SympyParsingConfig",
+    "SyntacticalPattern",
+    "apply_convention",
+    "compute_relative_tolerance_from_significant_decimals",
+    "convention_parser",
+    "convert_absolute_notation",
+    "convert_bracket_notation",
+    "create_expression_set",
+    "extract_latex",
+    "find_matching_parenthesis",
+    "generate_arbitrary_number_pattern_matcher",
+    "has_matching_brackets",
+    "is_multiple_answers_wrapper",
+    "is_number",
+    "latex_symbols",
+    "parse_expression",
     "parse_latex",
-    "sanitise_latex",
-    "preview_function",
+    "parse_symbol_assumptions",
     "parse_symbolic",
+    "preprocess_expression",
+    "preview_function",
+    "sanitise_latex",
+    "substitute",
+    "substitute_input_symbols",
+    "substitutions_sort_key",
+    "sympy_symbols",
+    "sympy_to_latex",
 ]

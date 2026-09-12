@@ -1,35 +1,29 @@
 import tokenize
-from copy import deepcopy
+from collections.abc import Mapping
+from typing import Any
 
-from compareexpressions.expression_parsing.expression_utilities import (
+from compareexpressions.expression_parsing import (
+    ExpressionParams,
+    Preview,
+    Result,
+    SympyParsingConfig,
     find_matching_parenthesis,
     parse_expression,
-    SymbolDict,
+    parse_latex,
+    sanitise_latex,
     sympy_to_latex,
 )
 
-from compareexpressions.expression_parsing.preview_utilities import (
-    Params,
-    Preview,
-    Result,
-    parse_latex,
-    sanitise_latex,
-)
-
-from compareexpressions.expression_parsing.expression_utilities import default_parameters as symbolic_default_parameters
 from .physical_quantity_utilities import SLR_quantity_parser as quantity_parser, expression_preprocess
 from .physical_quantity_utilities import SLR_quantity_parsing as quantity_parsing
 
 # CONSIDER: Move these to separate file so that they can be shared with
 # the physical quantity context (or move preview implementation into context file)
-default_parameters = deepcopy(symbolic_default_parameters)
-default_parameters.update(
-    {
-        "physical_quantity": True,
-        "strictness": "natural",
-        "units_string": "SI common imperial",
-    }
-)
+default_parameters = {
+    "physical_quantity": True,
+    "strictness": "natural",
+    "units_string": "SI common imperial",
+}
 
 
 def fix_exponents(response):
@@ -58,7 +52,7 @@ def fix_exponents(response):
     return response
 
 
-def preview_function(response: str, params: Params) -> Result:
+def preview_function(response: str, params: Mapping[str, Any]) -> Result:
     """
     Function used to preview a student response.
     ---
@@ -78,10 +72,9 @@ def preview_function(response: str, params: Params) -> Result:
     The way you wish to structure you code (all in this function, or
     split into many) is entirely up to you.
     """
-    for (key, value) in default_parameters.items():
-        if key not in params.keys():
-            params.update({key: value})
-    symbols: SymbolDict = params.get("symbols", {})
+    params = {**default_parameters, **params}
+    expression_params = ExpressionParams.from_dict(params)
+    symbols = expression_params.symbols
 
     if not response:
         return Result(preview=Preview(latex="", sympy=""))
@@ -100,9 +93,8 @@ def preview_function(response: str, params: Params) -> Result:
             unit = res_parsed.unit
             value_latex = ""
             if value is not None:
-                value_string = parse_latex(value.content_string(), symbols, params.get("simplify", False))
-                params.update({"is_latex": False})
-                value = parse_expression(value_string, params)
+                value_string = parse_latex(value.content_string(), symbols, expression_params.simplify)
+                value = parse_expression(value_string, SympyParsingConfig.from_params(expression_params))
                 value_latex = sympy_to_latex(value, symbols)
             separator_latex = ""
             separator_sympy = ""

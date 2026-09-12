@@ -4,6 +4,41 @@
 
 The first release after the extraction refactor. The import path is now `compareexpressions.expression_parsing` (was `expression_parsing`).
 
+### Renamed and restructured
+
+Parameters are typed now. Build an `ExpressionParams` with `ExpressionParams.from_dict(evaluation_params)` (JSON keys such as `complexNumbers` are mapped, unrelated keys ignored). It is immutable, and its `symbols` are normalised on construction: blank codes and aliases are dropped, aliases stripped, and `lambda` moved to `lamda`, which always exists. `SympyParsingConfig` replaces the `parsing_params` dict. `preview_function` still accepts a plain parameter mapping.
+
+| v0.1 | 0.2.0 |
+|---|---|
+| `expression_parsing` (import) | `compareexpressions.expression_parsing` |
+| `default_parameters` (dict) | `ExpressionParams()` defaults |
+| `params` dicts passed to `substitute_input_symbols`, `create_expression_set`, `preprocess_expression` | `ExpressionParams` |
+| `create_sympy_parsing_params(params, unsplittable_symbols, symbol_assumptions)` → dict | `SympyParsingConfig.from_params(params, unsplittable_symbols, symbol_assumptions)`; variants via `.replace(...)` |
+| `parse_expression(expr, parsing_params)` | `parse_expression(expr, config)`. It still doesn't substitute symbol aliases: run `preprocess_expression` first. |
+| `preprocess_expression(...)` → `(success, expr, feedback)` | → `Preprocessed(expression, feedback)` with `.success` |
+| `convert_bracket_notation` / `convert_absolute_notation` → `(expr, (tag, FeedbackTag))` | → `(expr, FeedbackTag \| None)` |
+| `FeedbackTag` namedtuple | frozen dataclass `FeedbackTag(tag, inputs)`; tag names in the `FeedbackTagName` `StrEnum` |
+| `parse_symbolic` raised `SyntaxError(FeedbackTag(...))` | raises `ExpressionSyntaxError`; the tag is `.feedback` |
+| `preview_function` raised `ValueError` | raises `ExpressionParsingError` (a `ValueError`) |
+| `parse_latex(response, symbols, simplify, parameters=None)` | `parse_latex(response, symbols, simplify=False)`; `symbols` maps codes to `SymbolSpec` |
+| `sympy_to_latex(expr, symbols_dict, settings)` | `sympy_to_latex(expr, params.symbols, settings)` |
+| symbol dicts `{"latex": ..., "aliases": [...]}` / `SymbolDict` / `SymbolData` | `SymbolSpec(latex, aliases)`; `from_dict` accepts the dict form |
+| `Params` TypedDict | removed: pass a mapping or `ExpressionParams` |
+| `Preview` / `Result` TypedDicts | same names; `feedback` is `NotRequired` (lf_toolkit's `Preview` requires it) |
+| `SLR_implicit_multiplication_convention_parser(convention)` | `convention_parser(convention)` (cached per convention) |
+| `preprocess_according_to_chosen_convention(expr, params)` | `apply_convention(expr, convention)` |
+| `transform_unicode_greek_symbols` / `protect_elementary_functions_substitutions` / `convert_unicode_dashes` | `substitution.greek_symbol_substitutions` / `elementary_function_substitutions` / `unicode_dash_substitutions` |
+| `elementary_functions_names` / `special_symbols_names` (lists mutated at import) | `symbol_tables.ELEMENTARY_FUNCTIONS` / `GREEK_SYMBOLS` (tuples of `SymbolAliases`) |
+| `is_number_regex` / `is_nonnegative_number_regex` | `numbers.NUMBER_REGEX` / `NONNEGATIVE_NUMBER_REGEX` |
+| `patterns` (dict of dicts) | `PATTERNS` (dict of `SyntacticalPattern`) |
+| `ModifiedLatexPrinter`, `symbol_latex_re` | private `_LatexPrinter`; `latex.SYMBOL_LATEX_RE` |
+
+Modules: `params`, `symbol_tables`, `preprocessing`, `substitution`, `conventions`, `sympy_parsing`, `latex`, `preview`, `numbers`, `feedback`, `errors` (replacing `expression_utilities`, `preview_utilities`, `symbolic_preview` and `syntactical_comparison`). The `typing_extensions` dependency is dropped.
+
+Behaviour changes from normalising symbols once: every code path now sees the task's `lambda` symbol as `lamda`, printed with the task's LaTeX (direct `parse_expression` + `sympy_to_latex` used to fall back to `\lambda`, and the LaTeX preview output `lambda`), and `lamda` is always an unsplittable symbol.
+
+Also: the implicit-multiplication convention parser is built once per convention instead of on every parse, and `create_expression_set` returns its expressions in first-seen order (it used to be set order, which depends on the hash seed); substitution precedence ties are broken deterministically.
+
 ### Security
 
 - **`symbol_assumptions` is no longer evaluated as code.** The parameter string (e.g. `"('a','positive') ('f','function')"`) was passed to `eval()`, and each assumption was pasted into another `eval("Symbol('x', <assumption>=True)")`, so a task author (or anyone who could set evaluation parameters) could run arbitrary Python. Groups are now read with `ast.literal_eval` and must be pairs of strings; assumption names must be identifiers and are passed as `Symbol(name, **{assumption: True})`. Malformed input raises `SymbolAssumptionError` (a `ValueError`). Valid assumptions behave as before, including `constant` and `function`.

@@ -1,5 +1,5 @@
 import pytest
-from compareexpressions.expression_parsing.expression_utilities import parse_expression, create_sympy_parsing_params
+from compareexpressions.expression_parsing import ExpressionParams, SympyParsingConfig, parse_expression
 
 class TestMultiCharImplicitMultiHigherPrecedenceIntegration:
     """
@@ -23,7 +23,7 @@ class TestMultiCharImplicitMultiHigherPrecedenceIntegration:
             "symbols": symbols_dict,
         }
 
-        parsing_params = create_sympy_parsing_params(params)
+        parsing_params = SympyParsingConfig.from_params(ExpressionParams.from_dict(params))
 
         try:
             parsed_response = parse_expression(response, parsing_params)

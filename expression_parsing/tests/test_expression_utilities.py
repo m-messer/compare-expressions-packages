@@ -1,11 +1,12 @@
 import pytest
 from sympy import Symbol, sqrt, sin as sympy_sin
 
-from compareexpressions.expression_parsing.expression_utilities import (
+from compareexpressions.expression_parsing import (
+    ExpressionParams,
+    SymbolSpec,
     compute_relative_tolerance_from_significant_decimals,
     convert_absolute_notation,
     convert_bracket_notation,
-    convert_unicode_dashes,
     create_expression_set,
     extract_latex,
     find_matching_parenthesis,
@@ -13,13 +14,16 @@ from compareexpressions.expression_parsing.expression_utilities import (
     is_multiple_answers_wrapper,
     latex_symbols,
     preprocess_expression,
-    protect_elementary_functions_substitutions,
     substitute,
     substitute_input_symbols,
     substitutions_sort_key,
     sympy_symbols,
     sympy_to_latex,
-    transform_unicode_greek_symbols,
+)
+from compareexpressions.expression_parsing.substitution import (
+    elementary_function_substitutions,
+    greek_symbol_substitutions,
+    unicode_dash_substitutions,
 )
 
 
@@ -57,7 +61,7 @@ class TestConvertUnicodeDashes:
         ]
     )
     def test_convert_unicode_dashes(self, expr, expected):
-        result = convert_unicode_dashes(expr)
+        result = unicode_dash_substitutions(expr)
         assert result == expected
 
 
@@ -84,49 +88,49 @@ class TestConvertAbsoluteNotation:
         # More than 2 pipes with ambiguous positions produces feedback
         expr, feedback = convert_absolute_notation("|x|y|z|", "response")
         assert feedback is not None
-        assert feedback[0] == "ABSOLUTE_VALUE_NOTATION_AMBIGUITY"
+        assert feedback.tag == "ABSOLUTE_VALUE_NOTATION_AMBIGUITY"
 
 
 class TestTransformUnicodeGreekSymbols:
 
     def test_no_greek_symbols_returns_empty(self):
-        assert transform_unicode_greek_symbols("x + y") == []
+        assert greek_symbol_substitutions("x + y") == []
 
     def test_named_greek_symbol_returns_self_substitution(self):
-        result = transform_unicode_greek_symbols("alpha + 1")
+        result = greek_symbol_substitutions("alpha + 1")
         assert ("alpha", " alpha ") in result
 
     def test_unicode_greek_alias_maps_to_name(self):
         # α is an alias for "alpha"
-        result = transform_unicode_greek_symbols("α")
+        result = greek_symbol_substitutions("α")
         assert ("α", " alpha ") in result
 
     def test_multiple_greek_symbols(self):
-        result = transform_unicode_greek_symbols("alpha + beta")
+        result = greek_symbol_substitutions("alpha + beta")
         assert ("alpha", " alpha ") in result
         assert ("beta", " beta ") in result
 
     def test_unicode_beta_alias(self):
-        result = transform_unicode_greek_symbols("β")
+        result = greek_symbol_substitutions("β")
         assert ("β", " beta ") in result
 
 
 class TestProtectElementaryFunctionsSubstitutions:
 
     def test_no_functions_returns_empty(self):
-        assert protect_elementary_functions_substitutions("x + y") == []
+        assert elementary_function_substitutions("x + y") == []
 
     def test_sin_generates_self_substitution(self):
-        result = protect_elementary_functions_substitutions("sin(x)")
+        result = elementary_function_substitutions("sin(x)")
         assert ("sin", " sin ") in result
 
     def test_alias_maps_to_canonical_name(self):
         # arctan is an alias for atan
-        result = protect_elementary_functions_substitutions("arctan(x)")
+        result = elementary_function_substitutions("arctan(x)")
         assert ("arctan", " atan ") in result
 
     def test_multiple_functions(self):
-        result = protect_elementary_functions_substitutions("sin(x) + cos(x)")
+        result = elementary_function_substitutions("sin(x) + cos(x)")
         assert ("sin", " sin ") in result
         assert ("cos", " cos ") in result
 
@@ -134,25 +138,25 @@ class TestProtectElementaryFunctionsSubstitutions:
 class TestSubstituteInputSymbols:
 
     def test_plain_expression_unchanged(self):
-        result = substitute_input_symbols("x+y", {})
+        result = substitute_input_symbols("x+y", ExpressionParams())
         assert result == ["x+y"]
 
     def test_lambda_replaced_with_lamda(self):
-        result = substitute_input_symbols("lambda", {})
+        result = substitute_input_symbols("lambda", ExpressionParams())
         assert result == ["lamda"]
 
     def test_alias_replaced_with_symbol_code(self):
         params = {"symbols": {"x": {"latex": r"\(x\)", "aliases": ["x_var"]}}}
-        result = substitute_input_symbols(["x_var"], params)
+        result = substitute_input_symbols(["x_var"], ExpressionParams.from_dict(params))
         assert result == ["x"]
 
     def test_symbol_code_preserved(self):
         params = {"symbols": {"x": {"latex": r"\(x\)", "aliases": ["x_var"]}}}
-        result = substitute_input_symbols(["x"], params)
+        result = substitute_input_symbols(["x"], ExpressionParams.from_dict(params))
         assert result == ["x"]
 
     def test_list_input_accepted(self):
-        result = substitute_input_symbols(["x", "y"], {})
+        result = substitute_input_symbols(["x", "y"], ExpressionParams())
         assert result == ["x", "y"]
 
 
@@ -242,7 +246,7 @@ class TestConvertBracketNotation:
         result, feedback = convert_bracket_notation(expr)
         assert result == expr
         assert feedback is not None
-        assert feedback[0] == "BRACKET_NOTATION_MISMATCH"
+        assert feedback.tag == "BRACKET_NOTATION_MISMATCH"
 
 
 class TestSubstitute:
@@ -345,12 +349,12 @@ class TestExtractLatex:
 class TestLatexSymbols:
 
     def test_maps_symbol_to_latex_string(self):
-        syms = {"x": {"latex": r"\(x\)", "aliases": []}}
+        syms = {"x": SymbolSpec(r"\(x\)")}
         result = latex_symbols(syms)
         assert result == {Symbol("x"): "x"}
 
     def test_greek_latex_preserved(self):
-        syms = {"alpha": {"latex": r"\(\alpha\)", "aliases": []}}
+        syms = {"alpha": SymbolSpec(r"\(\alpha\)")}
         result = latex_symbols(syms)
         assert result == {Symbol("alpha"): r"\alpha"}
 
@@ -362,19 +366,19 @@ class TestSympyToLatex:
 
     def test_simple_power(self):
         expr = Symbol("x") ** 2
-        syms = {"x": {"latex": r"\(x\)", "aliases": []}}
+        syms = {"x": SymbolSpec(r"\(x\)")}
         result = sympy_to_latex(expr, syms)
         assert result == "x^{2}"
 
     def test_custom_latex_name_used(self):
         expr = Symbol("alpha")
-        syms = {"alpha": {"latex": r"\(\alpha\)", "aliases": []}}
+        syms = {"alpha": SymbolSpec(r"\(\alpha\)")}
         result = sympy_to_latex(expr, syms)
         assert result == r"\alpha"
 
     def test_sqrt(self):
         expr = sqrt(Symbol("x"))
-        syms = {"x": {"latex": r"\(x\)", "aliases": []}}
+        syms = {"x": SymbolSpec(r"\(x\)")}
         result = sympy_to_latex(expr, syms)
         assert result == r"\sqrt{x}"
 
@@ -402,25 +406,25 @@ class TestSubstitutionsSortKey:
 class TestCreateExpressionSet:
 
     def test_plain_string_wrapped_in_list(self):
-        result = create_expression_set("x+y", {})
+        result = create_expression_set("x+y", ExpressionParams())
         assert result == ["x+y"]
 
     def test_set_notation_split_into_list(self):
-        result = create_expression_set("{x, y}", {})
+        result = create_expression_set("{x, y}", ExpressionParams())
         assert sorted(result) == ["x", "y"]
 
     def test_list_input_accepted(self):
-        result = create_expression_set(["x", "y"], {})
+        result = create_expression_set(["x", "y"], ExpressionParams())
         assert sorted(result) == ["x", "y"]
 
     def test_plus_minus_expands_to_two_expressions(self):
         params = {"plus_minus": "±"}
-        result = create_expression_set("±x", params)
+        result = create_expression_set("±x", ExpressionParams.from_dict(params))
         assert sorted(result) == sorted(["+x", "-x"]) or sorted(result) == sorted(["x", "-x"])
         assert len(result) == 2
 
     def test_curly_braces_used_for_grouping_are_not_split(self):
-        result = create_expression_set("{x+1}*{x-2}", {})
+        result = create_expression_set("{x+1}*{x-2}", ExpressionParams())
         assert result == ["{x+1}*{x-2}"]
 
 
@@ -443,25 +447,29 @@ class TestIsMultipleAnswersWrapper:
 class TestPreprocessExpression:
 
     def test_plain_expression_succeeds(self):
-        success, expr, feedback = preprocess_expression("response", "x+y", {})
+        preprocessed = preprocess_expression("response", "x+y", ExpressionParams())
+        success, expr, feedback = preprocessed.success, preprocessed.expression, preprocessed.feedback
         assert success is True
         assert expr == "x+y"
         assert feedback is None
 
     def test_absolute_value_notation_converted(self):
-        success, expr, feedback = preprocess_expression("response", "|x|", {})
+        preprocessed = preprocess_expression("response", "|x|", ExpressionParams())
+        success, expr, feedback = preprocessed.success, preprocessed.expression, preprocessed.feedback
         assert success is True
         assert expr == "Abs(x)"
         assert feedback is None
 
     def test_ambiguous_pipes_returns_failure(self):
-        success, expr, feedback = preprocess_expression("response", "|x|y|z|", {})
+        preprocessed = preprocess_expression("response", "|x|y|z|", ExpressionParams())
+        success, expr, feedback = preprocessed.success, preprocessed.expression, preprocessed.feedback
         assert success is False
         assert feedback is not None
-        assert feedback[0] == "ABSOLUTE_VALUE_NOTATION_AMBIGUITY"
+        assert feedback.tag == "ABSOLUTE_VALUE_NOTATION_AMBIGUITY"
 
     def test_square_brackets_converted(self):
-        success, expr, feedback = preprocess_expression("response", "[x+y]", {})
+        preprocessed = preprocess_expression("response", "[x+y]", ExpressionParams())
+        success, expr, feedback = preprocessed.success, preprocessed.expression, preprocessed.feedback
         assert success is True
         assert expr == "(x+y)"
         assert feedback is None
@@ -476,8 +484,9 @@ class TestPreprocessExpression:
         ]
     )
     def test_mismatched_brackets_returns_failure(self, expr):
-        success, result, feedback = preprocess_expression("response", expr, {})
+        preprocessed = preprocess_expression("response", expr, ExpressionParams())
+        success, result, feedback = preprocessed.success, preprocessed.expression, preprocessed.feedback
         assert success is False
         assert result == expr
         assert feedback is not None
-        assert feedback[0] == "BRACKET_NOTATION_MISMATCH"
+        assert feedback.tag == "BRACKET_NOTATION_MISMATCH"

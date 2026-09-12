@@ -1,8 +1,7 @@
 import os
 import pytest
 
-from compareexpressions.expression_parsing.preview_utilities import Params, extract_latex
-from compareexpressions.expression_parsing.symbolic_preview import preview_function
+from compareexpressions.expression_parsing import extract_latex, preview_function
 from ._fixtures import elementary_function_test_cases
 
 
@@ -27,7 +26,7 @@ class TestPreviewFunction():
 
     def test_doesnt_simplify_latex_by_default(self):
         response = "\\frac{x + x^2 + x}{x}"
-        params = Params(is_latex=True)
+        params = dict(is_latex=True)
         result = preview_function(response, params)
         preview = result["preview"]
 
@@ -35,14 +34,14 @@ class TestPreviewFunction():
 
     def test_doesnt_simplify_sympy_by_default(self):
         response = "(x + x**2 + x)/x"
-        params = Params(is_latex=False)
+        params = dict(is_latex=False)
         result = preview_function(response, params)
         preview = result["preview"]
         assert preview.get("latex") == "\\frac{x^{2} + x + x}{x}"
 
     def test_simplifies_latex_on_param(self):
         response = "\\frac{x + x^2 + x}{x}"
-        params = Params(is_latex=True, simplify=True)
+        params = dict(is_latex=True, simplify=True)
         result = preview_function(response, params)
         preview = result["preview"]
 
@@ -50,7 +49,7 @@ class TestPreviewFunction():
 
     def test_simplifies_sympy_on_param(self):
         response = "(x + x**2 + x)/x"
-        params = Params(is_latex=False, simplify=True)
+        params = dict(is_latex=False, simplify=True)
         result = preview_function(response, params)
         preview = result["preview"]
 
@@ -58,28 +57,28 @@ class TestPreviewFunction():
 
     def test_sympy_handles_implicit_multiplication(self):
         response = "sin(x) + cos(2x) - 3x**2"
-        params = Params(is_latex=False, strict_syntax=False)
+        params = dict(is_latex=False, strict_syntax=False)
         result = preview_function(response, params)
         preview = result["preview"]
         assert preview.get("latex") == r"- 3 \cdot x^{2} + \sin{\left(x \right)} + \cos{\left(2 \cdot x \right)}"
 
     def test_latex_with_equality_symbol(self):
         response = "\\frac{x + x^2 + x}{x} = y"
-        params = Params(is_latex=True, simplify=False)
+        params = dict(is_latex=True, simplify=False)
         result = preview_function(response, params)
         preview = result["preview"]
         assert preview.get("sympy") == '(x**2 + x + x)/x=y'
 
     def test_sympy_with_equality_symbol(self):
         response = "Eq((x + x**2 + x)/x, 1)"
-        params = Params(is_latex=False, simplify=False)
+        params = dict(is_latex=False, simplify=False)
         result = preview_function(response, params)
         preview = result["preview"]
         assert preview.get("latex") == "\\frac{x^{2} + x + x}{x} = 1"
 
     def test_latex_with_plus_minus(self):
         response = r"\pm \frac{3}{\sqrt{5}} i"
-        params = Params(
+        params = dict(
             is_latex=True,
             simplify=False,
             complexNumbers=True,
@@ -99,7 +98,7 @@ class TestPreviewFunction():
         assert preview.get("sympy") in {'{3*(sqrt(5)/5)*I, -3*sqrt(5)/5*I}', '{-3*sqrt(5)/5*I, 3*(sqrt(5)/5)*I}'}
         assert preview.get("latex") == r'\pm \frac{3}{\sqrt{5}} i'
         response = r"4 \pm \sqrt{6}}"
-        params = Params(
+        params = dict(
             is_latex=True,
             simplify=False,
             complexNumbers=True,
@@ -117,21 +116,21 @@ class TestPreviewFunction():
 
     def test_latex_conversion_preserves_default_symbols(self):
         response = "\\mu + x + 1"
-        params = Params(is_latex=True, simplify=False)
+        params = dict(is_latex=True, simplify=False)
         result = preview_function(response, params)
         preview = result["preview"]
         assert preview.get("sympy") in "mu + x + 1"
 
     def test_sympy_conversion_preserves_default_symbols(self):
         response = "mu + x + 1"
-        params = Params(is_latex=False, simplify=False)
+        params = dict(is_latex=False, simplify=False)
         result = preview_function(response, params)
         preview = result["preview"]
         assert preview.get("latex") == "\\mu + x + 1"
 
     def test_latex_conversion_preserves_optional_symbols(self):
         response = "m_{ \\text{table} } + \\text{hello}_\\text{world} - x + 1"
-        params = Params(
+        params = dict(
             is_latex=True,
             simplify=False,
             symbols={
@@ -151,7 +150,7 @@ class TestPreviewFunction():
 
     def test_sympy_conversion_preserves_optional_symbols(self):
         response = "m_table + test + x + 1"
-        params = Params(
+        params = dict(
             is_latex=False,
             simplify=False,
             symbols={
@@ -168,7 +167,7 @@ class TestPreviewFunction():
 
     def test_invalid_latex_returns_error(self):
         response = "\frac{ m_{ \\text{table} } + x + 1 }{x"
-        params = Params(
+        params = dict(
             is_latex=True,
             simplify=False,
             symbols={"m_table": {"latex": "m_{\\text{table}}", "aliases": []}},
@@ -179,7 +178,7 @@ class TestPreviewFunction():
 
     def test_invalid_sympy_returns_error(self):
         response = "x + x***2 - 3 / x 4"
-        params = Params(simplify=False, is_latex=False)
+        params = dict(simplify=False, is_latex=False)
 
         with pytest.raises(ValueError):
             preview_function(response, params)

@@ -164,6 +164,34 @@
   "reason": "expression_parsing: an expression with more than one '=' is rejected instead of silently parsing as Eq of the first two parts",
   "value": "ERROR"
  },
+ "expr.parse|symbols|lam + lambda": {
+  "reason": "expression_parsing: task symbols are normalised once (lambda -> lamda) in ExpressionParams, so every path maps the task's lambda to lamda and prints it with the task's LaTeX",
+  "value": {
+   "latex": "a l m + \\Lambda_0",
+   "parsed": "a*l*m + lamda"
+  }
+ },
+ "expr.parse|symbols|lambda x": {
+  "reason": "expression_parsing: task symbols are normalised once (lambda -> lamda) in ExpressionParams, so every path maps the task's lambda to lamda and prints it with the task's LaTeX",
+  "value": {
+   "latex": "\\Lambda_0 x",
+   "parsed": "lamda*x"
+  }
+ },
+ "expr.parse|symbols|λ": {
+  "reason": "expression_parsing: task symbols are normalised once (lambda -> lamda) in ExpressionParams, so every path maps the task's lambda to lamda and prints it with the task's LaTeX",
+  "value": {
+   "latex": "\\Lambda_0",
+   "parsed": "lamda"
+  }
+ },
+ "expr.preview_latex|symbols|\\Lambda_0 + 1": {
+  "reason": "expression_parsing: task symbols are normalised once (lambda -> lamda) in ExpressionParams, so every path maps the task's lambda to lamda and prints it with the task's LaTeX",
+  "value": {
+   "latex": "\\Lambda_0 + 1",
+   "sympy": "lamda + 1"
+  }
+ },
  "expr.preview|default|2E": {
   "reason": "slr_parsing: the convention parser no longer scans a capital E as its expression-node symbol, so inputs like 2E / xE parse",
   "value": {
