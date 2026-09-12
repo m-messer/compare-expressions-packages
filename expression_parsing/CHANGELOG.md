@@ -14,3 +14,4 @@ The first release after the extraction refactor. The import path is now `compare
 - `parse_expression("a=b=c")` raises `ExpressionParsingError` instead of silently returning `Eq(a, b)` (everything after the second `=` was dropped).
 - With `strict_syntax`, arithmetic on `{}` set literals (e.g. `{x+1}*{x-1}`) raises `ExpressionParsingError`. It used to build `Mul(FiniteSet, FiniteSet)`, which SymPy deprecates (the `SymPyDeprecationWarning` noted in `NOTES.md`) and will reject in a future version.
 - `create_sympy_parsing_params` fills in missing parameters from the defaults instead of raising `KeyError` (e.g. for `complexNumbers`) when the caller hasn't merged `default_parameters` first.
+- `create_expression_set` no longer raises `IndexError` when an expression is only `plus_minus` (± with nothing after it).

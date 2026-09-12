@@ -60,7 +60,6 @@ class TestParsing:
     def test_parsing_params_default_missing_keys(self):
         assert create_sympy_parsing_params({})["complexNumbers"] is False
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: a lone plus_minus raises IndexError")
     def test_lone_plus_minus(self):
         assert sorted(create_expression_set("plus_minus", {})) == ["", "-"]
 
