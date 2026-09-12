@@ -52,7 +52,6 @@ class TestGraph:
         assert graph.evaluations["E"].evaluate is evaluate
         assert graph.criteria["C"].feedback_string_generator is feedback
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: nodes define __eq__ without __hash__")
     def test_nodes_are_hashable_and_comparable_to_anything(self):
         node = small_graph().evaluations["E1"]
         assert node in {node}

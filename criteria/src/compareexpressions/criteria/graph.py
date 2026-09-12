@@ -19,7 +19,12 @@ class CriteriaGraph:
             return
 
         def __eq__(self, other):
+            if not isinstance(other, CriteriaGraph.Node):
+                return NotImplemented
             return self.label == other.label and self.summary == other.summary and self.details == other.details
+
+        def __hash__(self):
+            return hash((self.label, self.summary, self.details))
 
     class Evaluation(Node):
         def __init__(self, label, summary, details, evaluate, replacement=None):
