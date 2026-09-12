@@ -55,6 +55,7 @@ base_productions = [
 
 def generate_criteria_parser(reserved_expressions, token_list=base_token_list, productions=base_productions):
 
+    token_list = list(token_list)
     for value in reserved_expressions.values():
         token_list += [(key, "RESERVED") for key in value.keys()]
 

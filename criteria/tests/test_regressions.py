@@ -25,7 +25,6 @@ class TestTreeRendering:
 
 
 class TestCriteriaParser:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: generate_criteria_parser appends to the module default list")
     def test_reserved_words_do_not_leak_between_parsers(self):
         before = len(criteria_parsing.base_token_list)
         generate_criteria_parser({"learner": {"response": None}})
