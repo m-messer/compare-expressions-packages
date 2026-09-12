@@ -16,7 +16,6 @@ def small_graph():
 
 
 class TestTreeRendering:
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: Tree.mermaid() pops the tree's own children")
     def test_mermaid_does_not_consume_the_tree(self):
         tree = small_graph().build_tree("E1")
         first = tree.mermaid()

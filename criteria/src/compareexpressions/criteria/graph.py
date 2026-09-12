@@ -115,7 +115,7 @@ class CriteriaGraph:
                 special_nodes = []
             nodes = [self.label+self.identifier+('"'+self.summary+'"').join(starting_evaluation_style)]
             edges = [self.label+self.identifier+" --> "+child.label+child.identifier for child in self.outgoing]
-            stack = self.outgoing
+            stack = list(self.outgoing)
             while len(stack) > 0:
                 child = stack.pop()
                 if child.label in special_nodes:
