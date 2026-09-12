@@ -26,10 +26,12 @@ from .syntactical_comparison import is_number_regex
 from sympy.parsing.sympy_parser import parse_expr, split_symbols_custom, _token_splittable
 from sympy.parsing.sympy_parser import T as parser_transformations
 from sympy.printing.latex import LatexPrinter
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy import Basic, Symbol, Equality, Function
 
 import ast
 import re
+import warnings
 from typing import Dict, List, TypedDict
 
 from .errors import ExpressionParsingError, SymbolAssumptionError
@@ -818,6 +820,25 @@ def preprocess_expression(name, expr, parameters):
     success = feedback is None
     return success, expr, feedback
 
+def _parse_expr(expr, **kwargs):
+    """``sympy.parse_expr`` that rejects arithmetic on non-expressions.
+
+    With ``{}`` read as set literals (strict syntax), inputs like
+    ``{x+1}*{x-1}`` build ``Mul(FiniteSet, FiniteSet)``, which SymPy only
+    deprecates (and will reject in future). Other warnings pass through.
+    """
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        parsed = parse_expr(expr, **kwargs)
+    for warning in caught:
+        if issubclass(warning.category, SymPyDeprecationWarning) and "non-Expr" in str(warning.message):
+            raise ExpressionParsingError(
+                f"Arithmetic on a set ({{...}}) is not supported in {expr!r}; use ( ) for grouping."
+            )
+        warnings.warn_explicit(warning.message, warning.category, warning.filename, warning.lineno)
+    return parsed
+
+
 def parse_expression(expr_string, parsing_params):
     '''
     Input:
@@ -871,15 +892,15 @@ def parse_expression(expr_string, parsing_params):
             raise ExpressionParsingError(f"An expression can contain at most one '=': {expr}")
         if "=" in expr:
             expr_parts = expr.split("=")
-            lhs = parse_expr(expr_parts[0], transformations=transformations, local_dict=symbol_dict)
-            rhs = parse_expr(expr_parts[1], transformations=transformations, local_dict=symbol_dict)
+            lhs = _parse_expr(expr_parts[0], transformations=transformations, local_dict=symbol_dict)
+            rhs = _parse_expr(expr_parts[1], transformations=transformations, local_dict=symbol_dict)
             parsed_expr = Equality(lhs, rhs, evaluate=False)
         elif parsing_params.get("simplify", False):
-            parsed_expr = parse_expr(expr, transformations=transformations, local_dict=symbol_dict)
+            parsed_expr = _parse_expr(expr, transformations=transformations, local_dict=symbol_dict)
             if not isinstance(parsed_expr, Equality):
                 parsed_expr = parsed_expr.simplify()
         else:
-            parsed_expr = parse_expr(expr, transformations=transformations, local_dict=symbol_dict, evaluate=False)
+            parsed_expr = _parse_expr(expr, transformations=transformations, local_dict=symbol_dict, evaluate=False)
 
         if not isinstance(parsed_expr, Basic):
             raise ValueError(f"Failed to parse Sympy expression `{expr}`")

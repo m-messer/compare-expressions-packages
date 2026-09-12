@@ -51,7 +51,6 @@ class TestParsing:
         with pytest.raises(ValueError, match="="):
             parse_expression("a=b=c", parsing_params())
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: arithmetic on {} sets only raises a SymPy deprecation warning")
     def test_arithmetic_on_sets_is_rejected_in_strict_syntax(self):
         with warnings.catch_warnings():
             warnings.simplefilter("error")

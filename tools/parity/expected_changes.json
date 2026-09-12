@@ -156,6 +156,10 @@
    "parsed": "xE"
   }
  },
+ "expr.parse|strict|{x+1}*{x-1}": {
+  "reason": "expression_parsing: arithmetic on {} set literals (strict syntax) is rejected instead of building a deprecated Mul(FiniteSet, ...)",
+  "value": "ERROR"
+ },
  "expr.parse|symbols|a=b=c": {
   "reason": "expression_parsing: an expression with more than one '=' is rejected instead of silently parsing as Eq of the first two parts",
   "value": "ERROR"
@@ -180,6 +184,10 @@
    "latex": "xE",
    "sympy": "xE"
   }
+ },
+ "expr.preview|strict|{x+1}*{x-1}": {
+  "reason": "expression_parsing: arithmetic on {} set literals (strict syntax) is rejected instead of building a deprecated Mul(FiniteSet, ...)",
+  "value": "ERROR"
  },
  "quantity.parse|legacy|(5.27*pi/sqrt(11) + 5*7)^(4.3) (kilogrammegametre^2)/(fs^4daA)": {
   "reason": "slr_parsing: group traversal calls the action once per node, so units no longer records each reverted unit group twice (messages deduplicated; ids renumber)",
