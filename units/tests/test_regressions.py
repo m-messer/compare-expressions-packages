@@ -36,13 +36,20 @@ class TestPreview:
         [
             ("m^{-2}", "m**(-2)"),
             ("x^{23}", "x**(23)"),
-            # With '**' the notation was skipped twice, eating the exponent's first character.
-            pytest.param("m**{-2}", "m**(-2)", marks=pytest.mark.xfail(strict=True, reason="v0.1 bug")),
-            pytest.param("x**{23}", "x**(23)", marks=pytest.mark.xfail(strict=True, reason="v0.1 bug")),
+            # With '**' the notation used to be skipped twice, eating the exponent's first character.
+            ("m**{-2}", "m**(-2)"),
+            ("x**{23}", "x**(23)"),
+            ("x^2", "x**2"),
+            # An unbraced exponent used to borrow the next brace anywhere in the string.
+            ("x^2y^{3}", "x**2y**(3)"),
         ],
     )
     def test_fix_exponents(self, latex, expected):
         assert fix_exponents(latex) == expected
+
+    def test_latex_preview_keeps_the_exponent_sign(self):
+        preview = preview_function(r"162 \mathrm{~N} \mathrm{~m}**{-2}", {"is_latex": True})["preview"]
+        assert preview["sympy"] == "162 newton metre**(-2)"
 
     def test_preview_does_not_mutate_params(self):
         # Fixed while porting units to the typed expression_parsing API

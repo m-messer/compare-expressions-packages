@@ -27,28 +27,27 @@ default_parameters = {
 
 
 def fix_exponents(response):
-    processed_response = []
-    exponents_notation = ['^', '**']
-    for notation in exponents_notation:
+    """Rewrite LaTeX exponents ``^{...}`` / ``**{...}`` as ``**(...)``.
+
+    Only a brace directly after the exponent operator is unwrapped; other
+    exponents (``x^2``) just get ``**``.
+    """
+    for notation in ("^", "**"):
+        processed = []
         index = 0
         while index < len(response):
             exponent_start = response.find(notation, index)
-            if exponent_start > -1:
-                processed_response.append(response[index:exponent_start])
-                exponent_start += len(notation)
-                processed_response.append("**")
-                exponent_end = find_matching_parenthesis(response, exponent_start, delimiters=('{', '}'))
-                if exponent_end > 0:
-                    inside_exponent = '('+response[(exponent_start+len(notation)):exponent_end]+')'
-                    processed_response.append(inside_exponent)
-                    index = exponent_end+1
-                else:
-                    index = exponent_start
-            else:
-                processed_response.append(response[index:])
+            if exponent_start < 0:
+                processed.append(response[index:])
                 break
-        response = "".join(processed_response)
-        processed_response = []
+            processed.append(response[index:exponent_start] + "**")
+            index = exponent_start + len(notation)
+            if response.startswith("{", index):
+                exponent_end = find_matching_parenthesis(response, index, delimiters=("{", "}"))
+                if exponent_end > 0:
+                    processed.append("(" + response[index + 1:exponent_end] + ")")
+                    index = exponent_end + 1
+        response = "".join(processed)
     return response
 
 
