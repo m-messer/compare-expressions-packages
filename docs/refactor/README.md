@@ -27,6 +27,7 @@ Baseline before the refactor: **468 tests pass** (10 slr_parsing, 7 evaluation_r
 | evaluation_result | **Retired** (Phase 2). Generic result handling moves to `lf_toolkit.evaluation.Result`; criteria-specific helpers are in `criteria.feedback`, which records blank feedback as `""` so tags are kept. |
 | lf_toolkit | **Structural typing for now** (revised in Phase 2). lf_toolkit@ae52fa6 declares its dev tools (boto3, pillow, pydantic, ...) as runtime requirements: 80 packages / 237 MB. So our packages use a `ResultLike` protocol and TypedDicts structurally identical to lf_toolkit's, and lf_toolkit is a **dev-only** dependency (pinned git) for compatibility tests. It becomes a real dependency once [the upstream fixes](upstream-lf-toolkit.md) land. |
 | FeedbackTag | Stays in `expression_parsing` as a frozen dataclass plus a `StrEnum` of tag names. Consumers resolve tags to strings before `Result.add_feedback(tag, str)`. |
+| latex2sympy2 | **PyPI release, not the fork** (decided in Phase 3). A git pin would make the packages unpublishable. The fork's relevant change (`x = 2` → `Eq(x, 2)` rather than an assignment) is reproduced by `parse_latex` splitting `=` itself. |
 
 ## Working conventions
 

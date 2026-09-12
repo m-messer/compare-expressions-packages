@@ -1,61 +1,61 @@
-# Phase 3: `compareexpressions.expression_parsing`
+# Phase 3: `compareexpressions.expression_parsing`: done
 
-Depends on `slr_parsing`, `lf_toolkit`, `sympy` and `latex2sympy2` (lambda-feedback fork). The source is currently `expression_utilities.py` (868), `preview_utilities.py` (245), `symbolic_preview.py` (133), `syntactical_comparison.py` (100) and `feedback.py`.
+Depends on `slr_parsing`, `sympy` and `latex2sympy2` (the PyPI release; see below). Released as `0.2.0`; see [`expression_parsing/CHANGELOG.md`](../../expression_parsing/CHANGELOG.md) for the migration table.
 
-## Target modules
+## Modules
 
 | Module | Contents |
 |---|---|
-| `params.py` | Frozen `ExpressionParams` dataclass with `from_dict(Mapping)`: maps JSON keys (`complexNumbers`, `specialFunctions`), ignores unrelated keys, and normalises symbols once (drops empty codes/aliases, moves `lambda`→`lamda`). Also `SympyParsingConfig` with `from_params(params, unsplittable_symbols=(), symbol_assumptions=())`. |
-| `symbol_tables.py` | `ELEMENTARY_FUNCTIONS`, `GREEK_SYMBOLS` as tuples of `SymbolAliases(name, aliases)`; upper-case aliases built by a function, not by mutating lists at import time |
-| `preprocessing.py` | `create_expression_set`, `is_multiple_answers_wrapper`, `convert_bracket_notation`, `has_matching_brackets`, `find_matching_parenthesis`, `convert_absolute_notation`, `convert_unicode_dashes`, `preprocess_expression` (returns a result dataclass) |
-| `substitution.py` | `substitute`, `substitutions_sort_key`, pure `substitute_input_symbols`, greek/elementary protection substitutions |
-| `conventions.py` | Implicit-multiplication convention parser, cached per convention (`functools.cache`) |
-| `sympy_parsing.py` | `parse_expression`, `sympy_symbols`, transformation selection. The private SymPy `_token_splittable` import is isolated here. |
-| `latex.py` | `LatexPrinter` subclass, `sympy_to_latex`, `latex_symbols`, `extract_latex`, `parse_latex`, `E`/`e` placeholder handling, `sanitise_latex` |
-| `preview.py` | `parse_symbolic`, `preview_function` → `lf_toolkit.preview.Result` |
-| `numbers.py` | Raw-string number regexes, `is_number`, complex-form checks, `generate_arbitrary_number_pattern_matcher`, `compute_relative_tolerance_from_significant_decimals`, and a `SyntacticalPattern` dataclass replacing the `patterns` dict |
-| `feedback.py` | Frozen `FeedbackTag(tag, inputs)` dataclass and `FeedbackTagName` `StrEnum` |
-| `errors.py` | `ExpressionParsingError(ValueError)` → `ExpressionSyntaxError` (carries a `FeedbackTag`), `LatexParseError`, `SymbolAssumptionError` |
+| `params.py` | `ExpressionParams` (frozen; `from_dict` maps the JSON names; symbols normalised once), `SymbolSpec`, `Convention`, `parse_symbol_assumptions` |
+| `symbol_tables.py` | `ELEMENTARY_FUNCTIONS`, `GREEK_SYMBOLS` (`SymbolAliases` tuples), `UNICODE_DASHES` |
+| `preprocessing.py` | `create_expression_set`, bracket and absolute-value conversion, `preprocess_expression` → `Preprocessed` |
+| `substitution.py` | `substitute`, `substitute_input_symbols` (pure), Greek/function/dash substitutions |
+| `conventions.py` | `convention_parser` (cached), `apply_convention` |
+| `sympy_parsing.py` | `SympyParsingConfig`, `parse_expression`, `sympy_symbols` |
+| `latex.py` | `sympy_to_latex`, `parse_latex`, `sanitise_latex`, `E`/`e` placeholder handling |
+| `preview.py` | `parse_symbolic`, `preview_function`, `Preview`/`Result` TypedDicts |
+| `numbers.py` | Number regexes, `is_number`, complex-form checks, `generate_arbitrary_number_pattern_matcher`, `compute_relative_tolerance_from_significant_decimals`, `PATTERNS` |
+| `feedback.py` | `FeedbackTag` (frozen dataclass), `FeedbackTagName` (`StrEnum`) |
+| `errors.py` | `ExpressionParsingError` (a `ValueError`) → `SymbolAssumptionError`, `LatexParseError`, `ExpressionSyntaxError` |
+
+**Deviations from the plan:**
+- **latex2sympy2 stays on PyPI**, not the lambda-feedback fork (decided in Phase 3): a git pin would make the packages unpublishable. The fork's relevant behaviour (`x = 2` → `Eq(x, 2)`, where PyPI's release treats it as an assignment) is reproduced by `parse_latex` splitting `=` itself.
+- **`preview_function` accepts a plain mapping** as well as `ExpressionParams`, since it is an evaluation-function entry point that receives JSON parameters. Internal functions take `ExpressionParams`.
+- **`Preview.feedback` is `NotRequired`** (lf_toolkit's is required). Adding `"feedback": ""` would change every preview's output, so a preview dict has the same keys as before.
+- **`parse_expression` still doesn't substitute symbol aliases**, as in v0.1: callers run `preprocess_expression` first. `SympyParsingConfig.substitution_params` records the narrow substitutions it does apply.
+- **`typing_extensions` is dropped** (only `NotRequired` was used; it's in `typing` since 3.11).
 
 ## Checklist
 
-### Bugs (regression test first, one commit each)
+### Bugs (regression test, one commit each)
 
-- [ ] **Security:** `symbol_assumptions` goes through `eval()` on author-supplied strings, and so does `eval("Symbol('"+s+"',"+a+"=True)")`. Replace with `ast.literal_eval` and `Symbol(name, **{assumption: True})`, validating against SymPy's known assumptions. Make the `constant` branch explicit (SymPy accepts `constant=True`, so keep that behaviour).
-- [ ] `parse_expression("2E")` / `("xE")` crash in the convention parser. The root cause is fixed in slr_parsing; this adds the end-to-end test.
-- [ ] `substitute_input_symbols` mutates `params["symbols"]`. On the second call a user-defined `lambda` symbol is overwritten by the default: its aliases become `['lambda', 'lambda']` and the custom alias is lost.
-- [ ] Empty-alias removal deletes by ascending index, so indices shift, and the `.strip()` results are discarded: `["", "", "xx"]` leaves `['']`. The legacy `input_symbols` path has the same problem.
-- [ ] `create_expression_set("plus_minus")` → `IndexError`.
-- [ ] `parse_expression("a=b=c")` silently returns `Eq(a, b)`. Raise `ExpressionParsingError`.
-- [ ] `preview_function` / `parse_latex` mutate the caller's params, and `sympy_to_latex` mutates its `settings` argument.
-- [ ] `create_sympy_parsing_params` raises `KeyError` unless defaults were merged first.
-- [ ] `parse_latex`: `print(e)` swallows alias errors; `ValueError("…: ", str(e))` has a tuple payload and a "pass" typo; `"\pm"` is an invalid escape.
-- [ ] Fix the SymPy `Mul` deprecation warnings (non-`Expr` args) at their source.
+- [x] **Security:** `symbol_assumptions` was passed to `eval()` → `ast.literal_eval` + `Symbol(name, **{assumption: True})`.
+- [x] `2E` / `xE` failed to parse (root cause in slr_parsing).
+- [x] `substitute_input_symbols` overwrote a user-defined `lambda` on the second call (3 previews now show the task's LaTeX).
+- [x] Empty-alias removal shifted indices and dropped real aliases; `.strip()` results discarded; same in legacy `input_symbols`.
+- [x] `create_expression_set("plus_minus")` raised `IndexError`.
+- [x] `a=b=c` silently parsed as `Eq(a, b)` (7 probes now errors).
+- [x] `preview_function` / `parse_latex` mutated the caller's params; `sympy_to_latex` mutated `settings`.
+- [x] `create_sympy_parsing_params` raised `KeyError` without pre-merged defaults.
+- [x] `parse_latex` printed alias errors and raised a tuple-message `ValueError`; `"\pm"` escape.
+- [x] SymPy `Mul(FiniteSet, …)` deprecation (strict `{x+1}*{x-1}`) → `ExpressionParsingError` (2 probes).
+- [x] **Found during the refactor:** `sanitise_latex` looped forever on an unclosed `\mathrm{`/`\text{`, which learner LaTeX in units' preview could trigger.
+- [x] **Found during the refactor:** PyPI latex2sympy2 treated `x = 2` as an assignment (see above).
 
-### Restructure (no behaviour change)
+### Restructure / API
 
-- [ ] Split the four modules into the target modules above.
-- [ ] Replace `default_parameters` and `parsing_params` dicts with `ExpressionParams` / `SympyParsingConfig`.
-- [ ] Use `lf_toolkit.shared.Params`/`SymbolDict` and `lf_toolkit.preview.Preview`/`Result`, and delete the local TypedDicts.
-- [ ] Cache the convention parser (the SLR tables are rebuilt on every `parse_expression` call today).
-- [ ] Remove the dead `printing_symbols`, the unused imports, the `atol`/`rtol` updates inside the loop, and the template docstrings.
-- [ ] Document why `escape_regex_reserved_characters` isn't `re.escape` (it would escape spaces that are stripped afterwards).
-
-### API (break freely, recorded in `CHANGELOG.md`)
-
-- [ ] `create_sympy_parsing_params(params, ...)` → `SympyParsingConfig.from_params(...)`
-- [ ] `default_parameters` dict → `ExpressionParams` defaults
-- [ ] `preprocess_expression` returns a result dataclass instead of `(success, expr, feedback)`
-- [ ] `raise SyntaxError(FeedbackTag(...))` → `ExpressionSyntaxError(feedback_tag)`
-- [ ] `FeedbackTag` namedtuple → frozen dataclass; tag names as `FeedbackTagName`
-- [ ] `patterns` dict → `SyntacticalPattern` instances
-
-### Dependencies
-
-- [ ] Pin `latex2sympy2` to the lambda-feedback fork (what compareExpressions uses) instead of PyPI 1.8.3, and confirm the 157 carried-over tests pass on it.
-- [ ] Add `lf_toolkit` (git, `ae52fa6`, core only).
+- [x] Four modules split into the eleven above; the old modules are removed.
+- [x] `ExpressionParams` / `SympyParsingConfig` replace the params dicts; nothing mutates its parameters.
+- [x] Symbols normalised once. The consistent `lambda` → `lamda` handling changes 4 parity probes (reviewed).
+- [x] Convention parser cached per convention; deterministic expression-set and substitution ordering.
+- [x] Dead code removed (`printing_symbols`, atol/rtol copying, unused ± placeholders, template docstrings).
+- [x] Documented why `escape_regex_reserved_characters` isn't `re.escape`.
+- [x] `units` ported to the new API.
 
 ### Types & lint
 
-- [ ] `disallow_untyped_defs` + `check_untyped_defs` mypy clean; `ruff` clean; no `SyntaxWarning`.
+- [x] mypy with typed definitions required (SymPy and latex2sympy2 treated as `Any`); ruff lint and format; no `SyntaxWarning`s or `print`/`eval` in `src/`.
+
+### Tests (157 → 204)
+
+- [x] `test_regressions.py` (one per bug), `test_api.py` (params, config, conventions, LaTeX, preview shape vs lf_toolkit), carried-over suites ported to the typed API.
