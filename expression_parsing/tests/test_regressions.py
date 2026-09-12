@@ -1,5 +1,6 @@
 """Regression tests for bugs carried over from the v0.1 extraction."""
 
+import subprocess
 import sys
 import warnings
 from copy import deepcopy
@@ -98,3 +99,18 @@ class TestNoSideEffects:
         with pytest.raises(ValueError) as info:
             parse_latex(r"\frac{x", {}, False)
         assert len(info.value.args) == 1
+
+
+class TestSanitiseLatex:
+    def test_unclosed_wrapper_raises_instead_of_hanging(self):
+        # Run in a subprocess: the v0.1 code loops forever on this input.
+        script = (
+            "from compareexpressions.expression_parsing.preview_utilities import sanitise_latex\n"
+            "from compareexpressions.expression_parsing.errors import LatexParseError\n"
+            "try:\n"
+            "    sanitise_latex(r'3 \\mathrm{kg')\n"
+            "except LatexParseError as e:\n"
+            "    print('raised:', e)\n"
+        )
+        result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=30)
+        assert result.stdout.startswith("raised: Unclosed \\mathrm{")

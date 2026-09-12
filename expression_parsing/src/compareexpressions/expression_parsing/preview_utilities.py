@@ -229,6 +229,8 @@ def sanitise_latex(response):
             if wrapper_start > -1:
                 processed_response.append(response[index:wrapper_start])
                 wrapper_end = find_matching_parenthesis(response, wrapper_start+1, delimiters=('{', '}'))
+                if wrapper_end < 0:
+                    raise LatexParseError(f"Unclosed {wrapper}{{...}} in {response!r}.")
                 inside_wrapper = response[(wrapper_start+len(wrapper+"{")):wrapper_end]
                 processed_response.append(inside_wrapper)
                 index = wrapper_end+1
