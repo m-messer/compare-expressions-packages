@@ -1,5 +1,7 @@
 import json
 
+from .errors import CriteriaEvaluationError
+
 evaluation_style = ("([", "])")
 starting_evaluation_style = (">", "]")
 criterion_style = ("[", "]")
@@ -369,9 +371,7 @@ class CriteriaGraph:
                 try:
                     results = self.evaluations[e].evaluate(response)
                 except Exception as exc:
-                    print(e)
-                    print(self.evaluations)
-                    raise exc
+                    raise CriteriaEvaluationError(e) from exc
                 feedback.update(results)
                 for criterion in results.keys():
                     labels = {edge.target.label for edge in self.criteria[criterion].outgoing}

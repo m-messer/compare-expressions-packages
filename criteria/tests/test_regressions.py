@@ -4,6 +4,7 @@ import pytest
 
 from compareexpressions.criteria import CriteriaGraph, generate_criteria_parser
 from compareexpressions.criteria import parsing as criteria_parsing
+from compareexpressions.criteria.errors import CriteriaEvaluationError
 
 
 def small_graph():
@@ -57,7 +58,6 @@ class TestGraph:
         assert node in {node}
         assert node != "E1"
 
-    @pytest.mark.xfail(strict=True, reason="v0.1 bug: generate_feedback prints graph internals on failure")
     def test_failing_evaluation_is_reported_without_printing(self, capsys):
         def broken(response):
             raise RuntimeError("boom")
@@ -65,7 +65,7 @@ class TestGraph:
         graph = CriteriaGraph("g")
         graph.add_evaluation_node("E1", "eval", "details", evaluate=broken)
         graph.attach("E1", "E1_TRUE", summary="true", details="true")
-        with pytest.raises(Exception, match="E1") as info:
+        with pytest.raises(CriteriaEvaluationError, match="E1") as info:
             graph.generate_feedback("x", "E1_TRUE")
         assert isinstance(info.value.__cause__, RuntimeError)
         assert capsys.readouterr().out == ""
