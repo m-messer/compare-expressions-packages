@@ -55,6 +55,9 @@ class TestPreview:
         preview = preview_function(r"162 \mathrm{~N} \mathrm{~m}**{-2}", {"is_latex": True})["preview"]
         assert preview["sympy"] == "162 newton metre**(-2)"
 
+    def test_latex_preview_of_a_unit_alone(self):
+        assert preview_function(r"\mathrm{kg}", {"is_latex": True})["preview"]["sympy"] == "kilogram"
+
     def test_preview_does_not_mutate_params(self):
         # Fixed while porting units to the typed expression_parsing API
         # (the LaTeX branch set params["is_latex"] = False on the caller's dict).

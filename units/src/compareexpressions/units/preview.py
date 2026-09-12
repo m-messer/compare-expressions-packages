@@ -70,8 +70,6 @@ def preview_function(response: str, params: QuantityParams | Mapping[str, Any]) 
                 value_expr = parse_expression(value_string, SympyParsingConfig.from_params(params))
                 value_latex = sympy_to_latex(value_expr, params.symbols)
                 value_sympy = str(value_expr)
-            else:
-                value_sympy = "None"
             separators = ("~", " ") if value is not None and unit is not None else ("", "")
             unit_latex = quantity.unit_latex if unit is not None else ""
             unit_sympy = unit.content_string() if unit is not None else ""
